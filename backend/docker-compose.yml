@@ -1,0 +1,41 @@
+# services:
+#   database:
+#     image: postgres
+#     container_name: ${DATABASE_HOST}
+# #    healthcheck:
+# #       test: ["CMD-SHELL", "pg_isready"]
+# #       interval: 10s
+# #       timeout: 5s
+# #       retries: 5
+#     environment:
+#       - POSTGRES_USER=${DATABASE_USERNAME}
+#       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+#       - POSTGRES_DB=${DATABASE_NAME}
+#       - POSTGRES_HOST=${DATABASE_HOST}
+#       - POSTGRES_PORT=${DATABASE_PORT}
+#     command: postgres -p ${DATABASE_PORT}
+#     ports:
+#       - ${DATABASE_PORT}:${DATABASE_PORT}
+#     # volumes:
+#     #   - ./database/data:/csv-files
+#     #   - ./database/data/small_data:/test-csv-files
+#     # networks:
+#     #   - internal
+
+# # networks:
+# #   internal:
+
+services:
+  database:
+    image: postgres
+    container_name: db
+    environment:
+      - POSTGRES_USER=${DATABASE_USERNAME}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_HOST=${DATABASE_HOST}
+    command: postgres -p ${DATABASE_PORT}
+    volumes:
+      - ./app/db/data:/data
+    ports:
+      - "${DATABASE_PORT}:${DATABASE_PORT}"
