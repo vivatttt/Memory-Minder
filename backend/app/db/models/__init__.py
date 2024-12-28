@@ -1,5 +1,5 @@
-"""
+from backend.app.db.models.user import User
 
-Модели таблиц базы данных
-
-"""
+__all__ = [
+    "User",
+]
