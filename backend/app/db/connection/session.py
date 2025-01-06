@@ -1,11 +1,13 @@
+from typing import AsyncGenerator
+
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from typing import AsyncGenerator
-from backend.config import get_settings
+
+from shared.config import get_settings
 
 
 class SessionManager:
-    
+
     def __init__(self) -> None:
         self.refresh()
 

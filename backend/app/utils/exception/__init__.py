@@ -1,5 +1,5 @@
 class ConfigError(Exception):
     pass
 
-class UnknownEnviroment(ConfigError):
+class UnknownEnviromentError(ConfigError):
     pass

@@ -55,19 +55,19 @@ help: ##@Help Show this help
 
 
 run:
-	poetry run python3  $(backend)
+	poetry run python3 -m frontend.bot.run
 
 format:
 	poetry run ruff check --fix
 
 db:
-	docker-compose -f backend/docker-compose.yml up --build --remove-orphans
+	docker-compose -f docker-compose.yml up --build --remove-orphans
 
 revision:
-	export ALEMBIC_CONFIG=backend/alembic.ini && alembic revision --autogenerate
+	cd backend && alembic revision --autogenerate && cd ..
 
 migrate:
-	export ALEMBIC_CONFIG=backend/alembic.ini && alembic upgrade $(args)
+	cd backend && alembic upgrade $(args) && cd ..
 
 open_db:
 	docker exec -it db psql -d $(DATABASE_NAME) -U $(DATABASE_USERNAME) -p $(DATABASE_PORT)
