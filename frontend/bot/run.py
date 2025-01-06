@@ -43,7 +43,6 @@ async def main():
     try:
         await dp.start_polling(bot)
     except Exception:
-        print("WTF")
         logging.exception("An error occurred while running the bot")
 
 

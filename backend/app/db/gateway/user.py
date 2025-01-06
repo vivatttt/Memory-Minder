@@ -18,10 +18,12 @@ class UserGateway(Gateway[models.User, internal_objects.UserObject]):
         return cls.object.model_validate(data_from_db)
 
     @classmethod
-    async def add_user(cls, session: AsyncSession, name: str, is_admin: bool):
+    async def add_user(cls, session: AsyncSession, id_: int, name: str, username: str, is_admin: bool):
         session.add(
             cls.model(
+                id=id_,
                 name=name,
+                username=username,
                 is_admin=is_admin
             )
         )

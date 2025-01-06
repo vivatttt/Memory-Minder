@@ -1,7 +1,5 @@
-import uuid
-
 from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import BOOLEAN, TEXT, UUID
+from sqlalchemy.dialects.postgresql import BOOLEAN, TEXT, INTEGER
 
 from backend.app.db import DeclarativeBase
 
@@ -9,10 +7,7 @@ from backend.app.db import DeclarativeBase
 class User(DeclarativeBase):
     __tablename__ = "users"
 
-    id = Column(
-        UUID,
-        primary_key=True,
-        default=uuid.uuid4,
-    )
+    id = Column(INTEGER(), primary_key=True, autoincrement=False)
     name = Column(TEXT())
+    username = Column(TEXT())
     is_admin = Column(BOOLEAN())
