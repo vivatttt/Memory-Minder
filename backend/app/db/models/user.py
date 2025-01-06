@@ -1,6 +1,7 @@
 import uuid
+
 from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import TEXT, UUID, BOOLEAN
+from sqlalchemy.dialects.postgresql import BOOLEAN, TEXT, UUID
 
 from backend.app.db import DeclarativeBase
 
