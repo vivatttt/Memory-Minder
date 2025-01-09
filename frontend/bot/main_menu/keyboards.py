@@ -11,6 +11,9 @@ class MainMenuButtons(Enum):
 class StartGameButtons(Enum):
     play = "Играть"
 
+class ReturnHomeButtons(Enum):
+    return_home = "В начало"
+
 class Keyboard(BaseKeyboard):
     def main_menu(self):
         return self.create_reply_keyboard([button.value for button in MainMenuButtons])

@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-from frontend.bot.main_menu.keyboards import Keyboard, MainMenuButtons
+from frontend.bot.main_menu.keyboards import Keyboard, MainMenuButtons, ReturnHomeButtons
 from frontend.bot.main_menu.states import MainMenuForm
 from frontend.bot.games import GamesFactory
 
@@ -14,6 +14,16 @@ games_config = GamesFactory()
 @router.message(Command("start"))
 async def command_start(message: Message, state: FSMContext):
     await message.answer(
+        "Добро пожаловать в *MemoryMinder*\n_Выберите действие_",
+        parse_mode="MarkdownV2",
+        reply_markup=kb.main_menu()
+    )
+    await state.set_state(MainMenuForm.started)
+
+
+@router.callback_query(lambda callback : callback.data == ReturnHomeButtons.return_home.name)
+async def command_start(callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer(
         "Добро пожаловать в *MemoryMinder*\n_Выберите действие_",
         parse_mode="MarkdownV2",
         reply_markup=kb.main_menu()
