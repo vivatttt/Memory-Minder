@@ -24,7 +24,11 @@ class DevelopmentSettings(BaseSettings):
 
     ECHO_ENABLED: int = environ.get("ECHO_ENABLED", base_settings.ECHO_ENABLED)
 
-    BOT_API_TOKEN: str = environ.get("BOT_API_TOKEN", base_settings.BOT_API_TOKEN)
+    BOT_API_TOKEN: str = environ.get("BOT_API_TOKEN")
+    
+    YA_GPT_FOLDER_ID: str = environ.get("YA_GPT_FOLDER_ID")
+    YANDEX_CLOUD_OAUTH_TOKEN: str = environ.get("YANDEX_CLOUD_OAUTH_TOKEN")
+    YANDEX_CLOUD_SERVICE_ACCOUNT_API_KEY: str = environ.get("YANDEX_CLOUD_SERVICE_ACCOUNT_API_KEY")
     
     @property
     def database_settings(self) -> dict[str, str | int]:
