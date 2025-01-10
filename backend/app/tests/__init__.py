@@ -1,6 +1,8 @@
 import asyncio
-from backend.app.db.gateway.user import UserGateway
+
 from backend.app.db.connection import get_session
+from backend.app.db.gateway.user import UserGateway
+
 
 async def test():
     async for session in get_session():

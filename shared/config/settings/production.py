@@ -1,5 +1,7 @@
 from os import environ
+
 from pydantic_settings import BaseSettings
+
 from shared.config.base import production as base_settings
 
 
@@ -19,13 +21,13 @@ class ProductionSettings(BaseSettings):
 
     DB_CONNECT_RETRY: int = environ.get("DB_CONNECT_RETRY", base_settings.DB_CONNECT_RETRY)
     DB_POOL_SIZE: int = environ.get("DB_POOL_SIZE", base_settings.DB_POOL_SIZE)
-    
+
     BOT_API_TOKEN: str = environ.get("BOT_API_TOKEN")
-    
+
     YA_GPT_FOLDER_ID: str = environ.get("YA_GPT_FOLDER_ID")
     YANDEX_CLOUD_OAUTH_TOKEN: str = environ.get("YANDEX_CLOUD_OAUTH_TOKEN")
     YANDEX_CLOUD_SERVICE_ACCOUNT_API_KEY: str = environ.get("YANDEX_CLOUD_SERVICE_ACCOUNT_API_KEY")
-    
+
     @property
     def database_settings(self) -> dict[str, str | int]:
         return {

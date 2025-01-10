@@ -1,6 +1,8 @@
-from typing import Type
 from dataclasses import dataclass
+from typing import Type
+
 from aiogram.fsm.state import StatesGroup
+
 
 @dataclass
 class BaseGame:

@@ -1,12 +1,11 @@
-from aiogram import F, Router
-from aiogram.filters import Command
-from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery
+from aiogram import Router
 from aiogram.fsm.context import FSMContext
+from aiogram.types import Message, ReplyKeyboardRemove
 
-from frontend.bot.games.n_back.keyboards import Keyboard
 from frontend.bot.games.n_back import NBackGame
-from frontend.bot.games.n_back.states import NBackForm
+from frontend.bot.games.n_back.keyboards import Keyboard
 from frontend.bot.games.n_back.middleware import Middleware
+from frontend.bot.games.n_back.states import NBackForm
 
 router = Router()
 router.message.middleware(Middleware())
