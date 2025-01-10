@@ -1,6 +1,8 @@
-from backend.app.services.games.false_state import generate_game_data
-from frontend.bot.games.false_state.schemas import GameDataExternalModel, UserGame, GameData, Statements
 import random
+
+from backend.app.services.games.false_state import generate_game_data
+from frontend.bot.games.false_state.schemas import GameData, GameDataExternalModel, Statements, UserGame
+
 
 def shuffle_statements(wrong: list[str], correct: list[str]) -> tuple[set[int], str]:
     combined = wrong + correct
@@ -13,7 +15,7 @@ def shuffle_statements(wrong: list[str], correct: list[str]) -> tuple[set[int], 
         if statement in wrong_statements_set:
             wrong_inds.add(i + 1)
     return {
-        "wrong_inds": wrong_inds, 
+        "wrong_inds": wrong_inds,
         "text": statements_string,
         "num": len(wrong) + len(correct)
     }

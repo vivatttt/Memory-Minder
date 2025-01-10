@@ -1,7 +1,7 @@
-"""
+from backend.app.db.gateway.false_state_stats import FalseStateStatsGateway
+from backend.app.db.gateway.user import UserGateway
 
-Гейтвей базы данных. Функции, предоставляющие доступ к данным бд.
-Ожидается минимальное количество бизнес-логики
-(не должно быть функций, которые внутри себя содержат полный рассчет данных для какого-либо сценария)
-
-"""
+__all__ = [
+    "UserGateway",
+    "FalseStateStatsGateway",
+]

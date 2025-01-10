@@ -1,6 +1,7 @@
+from io import BytesIO
+
 import requests
 from PIL import Image
-from io import BytesIO
 
 # Ссылка на изображение из датасета
 image_url = "https://v5.airtableusercontent.com/v1/15/15/1677362400000/8XYHyC6BhcQlWERUddmqrA/JZOkhAQzNtgvDZ8hseUzcdYEmiNjyU45p1RqJsh5UNa2VTS3IiFzsP5G2ny0bC2s6PfcGuqSvExO1iop9lLICF6cvU2Atw5YpyI2cjVBaHRRQIsQYteV7johQrYiA75fT3xIgvKzQlomWmjDQoCQfQ/5wAawPq-9QC8UJDRwfWM3UvsM1bddJuFOqCFc6uBFlM"

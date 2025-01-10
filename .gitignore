@@ -35,3 +35,5 @@ poetry.lock
 
 # Ruff
 .ruff_cache
+
+api_key.*
