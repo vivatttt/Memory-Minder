@@ -21,11 +21,15 @@ router.message.middleware(Middleware())
 kb = Keyboard()
 
 @router.message(NamesMemoryForm.game_started)
-async def game_started(message: Message, state: FSMContext):
-    result = await rounds()
-    if result:
+async def game_started(message: Message, state: FSMContext, session: AsyncSession):
+
+    data = await state.get_data()
+    id = data.get('id')
+    result = await rounds(session, id)
+
+    if result != 0:
         welcome_text = (
-            f"Мы снова увидились в игре *{NamesMemoryGame.name}*\\!\n_Посмотрим\\, что у нас тут есть для вас_"
+            f"Мы снова увидились в игре *{NamesMemoryGame.name}*\\!\n\n_Посмотрим\\, что у нас тут есть для вас_"
         )
         reply_markup = kb.options_buttons()
     else:
@@ -82,10 +86,10 @@ async def rules_game(callback: CallbackQuery):
     )
 
 @router.callback_query(lambda callback: callback.data == with_game_slug(OptionsPlay.play.name))
-async def playing(callback: CallbackQuery, state: FSMContext):
+async def playing(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     message_ids = []
 
-    images = await get_images(user_id=1)
+    images = await get_images(session, user_id=1)
     await state.update_data(images=images)
 
     for i in range(images_in_round()):
@@ -145,13 +149,12 @@ async def rules_game(callback: types.CallbackQuery, state: FSMContext, session: 
     await callback.message.answer("Введите ваш ответ:")
 
 @router.message(NamesMemoryForm.waiting_for_answer)
-async def handle_user_answer(message: types.Message, state: FSMContext):
+async def handle_user_answer(message: types.Message, state: FSMContext, session: AsyncSession):
     data = await state.get_data()
     answers = data.get('answers', [])
     question_index = data.get('question_index', 0)
     images = data.get('images')
     id = data.get('id')
-    session = data.get('session')
 
     answers.append(message.text)
     question_index += 1
@@ -169,12 +172,11 @@ async def handle_user_answer(message: types.Message, state: FSMContext):
             photo=photo_url,
         )
     else:
-        results = await get_results_round(id, images, answers)
+        results, arr = await get_results_round(session, id, images, answers)
         await message.answer(
             f"Раунд завершен\\! Вы смогли правильно вспомнить {results}\\.\n\n"
-            f"Правильные ответы \\:\n" + "\n".join(answers),
+            f"Правильные ответы \\:\n" + "\n".join(arr),
             parse_mode="MarkdownV2",
             reply_markup=kb.continue_button()
         )
         await state.clear()
->>>>>>> 7850b34 (Add Second game)

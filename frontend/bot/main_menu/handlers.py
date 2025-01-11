@@ -109,6 +109,7 @@ async def handle_game_selection(callback: CallbackQuery, state: FSMContext):
     """Классы для каждой из игр имеют общее состояние входа - game_started"""
     game = games_config.get(callback.data)
     await state.set_state(game.form.game_started)
+    await state.update_data(id=callback.from_user.id)
     await callback.message.answer(
         f"Выбрана игра {game.name}\n_Нажмите чтобы начать_",
         parse_mode="MarkdownV2",

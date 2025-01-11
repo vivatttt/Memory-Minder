@@ -1,4 +1,4 @@
-жйЖЙfrom sqlalchemy import select, func
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.db import models

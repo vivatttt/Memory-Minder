@@ -8,6 +8,8 @@ import random
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+image = ImageGateway()
+
 async def get_images(session: AsyncSession, user_id: int) -> list[tuple[int, str, str]]:
 
     res = await ImageMemoryStatGateway.count_rounds(
@@ -15,24 +17,25 @@ async def get_images(session: AsyncSession, user_id: int) -> list[tuple[int, str
         user_id_in=user_id
     )
 
-    res = await ImageGateway.get_images(
-        session=session,
-        filter_id=res*images_in_round,
-        images_in_round=images_in_round
-    )
+    if res % 5 == 0:
 
-    arr = [(i.id, get_site + i.key, i.name_image) for i in res]
+        print("nes")
 
-    # site = 'https://i.postimg.cc/'
-    # arr = [(site + 'ZqxV778J/yiannis-tsaroychis-p308-1.jpg', '1'),
-    #        (site + 'mr5ZQ3mV/edward-hopper-summertime.jpg', 'ffff'),
-    #        (site + 'PqxrpVQP/edward-hopper-sunday.jpg', '7'),
-    #        (site + 'gJLz4w5p/george-luks-frank-crane.jpg', '8'),
-    #        (site + 'QCLXz8GT/george-luks-girl-with-doll.jpg', '9'),
-    #        (site + 'D0q2k9nY/george-luks-havana-cuba-1896.jpg', '10'),
-    #        (site + 'v898VVfL/george-luks-hitch-team-1916.jpg', '11'),
-    #        ]
-    print(arr)
+        res = await image.get_images(
+            session=session,
+            filter_id=res*images_in_round(),
+            images_in_round=images_in_round()
+        )
+    else:
 
+        print("change")
+
+        res = await image.get_images(
+            session=session,
+            filter_id=res * images_in_round(),
+            images_in_round=images_in_round()
+        )
+
+    arr = [(i.id, get_site() + i.key, i.name_image) for i in res]
     return arr
 
