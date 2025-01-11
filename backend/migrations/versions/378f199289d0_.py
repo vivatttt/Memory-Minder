@@ -26,7 +26,7 @@ def upgrade() -> None:
     sa.Column('played_at', postgresql.TIMESTAMP(timezone=True), nullable=True),
     sa.Column('won', sa.BOOLEAN(), nullable=True),
     sa.Column('level', sa.INTEGER(), nullable=True),
-    sa.ForeignKeyConstraint(['user_fid'], ['users.id'], name=op.f('fk__false_state_stats__user_id__users')),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk__false_state_stats__user_id__users')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk__false_state_stats'))
     )
     # ### end Alembic commands ###
