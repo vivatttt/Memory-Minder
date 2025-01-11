@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.schemas.internal_objects import UserObject
 from backend.app.utils.authorization import authorize_user
 from frontend.bot.base.texts import escape_markdown_v2
+
 from frontend.bot.games import GamesFactory
 from frontend.bot.main_menu.keyboards import Keyboard, MainMenuButtons, ReturnHomeButtons
 from frontend.bot.main_menu.states import AuthorizationForm, MainMenuForm
@@ -15,7 +16,6 @@ from frontend.bot.main_menu.utils import is_valid_user_name
 router = Router()
 kb = Keyboard()
 games_config = GamesFactory()
-
 
 @router.message(AuthorizationForm.waiting_for_name)
 async def show_unauthorized(message: Message, state: FSMContext):
@@ -81,6 +81,7 @@ async def view_statistics(message: Message, state: FSMContext):
     )
     await state.set_state(MainMenuForm.view_statistics)
 
+
 @router.message(F.text == MainMenuButtons.select_game.value)
 async def select_game(message: Message, state: FSMContext):
     if await state.get_state() != MainMenuForm.started:
@@ -90,6 +91,7 @@ async def select_game(message: Message, state: FSMContext):
         reply_markup=kb.game_selection()
     )
     await state.set_state(MainMenuForm.select_game)
+
 
 @router.message(F.text == MainMenuButtons.about.value)
 async def about(message: Message, state: FSMContext):
