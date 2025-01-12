@@ -7,17 +7,17 @@ from frontend.bot.games.names_memory.utils import with_game_slug
 from enum import Enum
 
 class OptionsButtons(Enum):
-    stats = "Статистика"
-    rules = "Правила"
+    stats = "👔Статистика"
+    rules = "📝Правила📝"
 
 class OptionsPlay(Enum):
-    play = "Играть"
+    play = "✨Играть"
 
 class Continue(Enum):
-    conti = "Понял ошибки!"
+    conti = "🫡Все понял!"
 
 class Agree(Enum):
-    agree = "Я готов!"
+    agree = "😎Я готов!😎"
 
 
 

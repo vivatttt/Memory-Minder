@@ -4,6 +4,7 @@ from backend.app.db.gateway import ViewedImageGateway
 from backend.app.db.connection import get_session
 from backend.app.services.games.names_memory.const import images_in_round, asking_in_round
 from datetime import datetime
+import re
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,15 +26,17 @@ async def rounds(session: AsyncSession, user_id: int) -> int:
     return res
 
 async def get_results_round(session: AsyncSession, user_id: int, images: list[tuple], answers: list[str]) -> int:
-
     result = 0
 
     for i, y in zip(images, answers):
-        if i[2] == y:
+        cleaned_image_name = ''.join(re.findall(r'[a-zA-Zа-яА-Я0-9]', i[2].lower()))
+        cleaned_expected_name = ''.join(re.findall(r'[a-zA-Zа-яА-Я0-9]', y.lower()))
+        if cleaned_image_name == cleaned_expected_name:
             result += 1
         else:
             continue
             # await ViewedImageGateway.add_not_guessed_image(session=session, user_id=user_id, image_id=i[0], used_in_game=5, correct=2)
+
     await ImageMemoryStatGateway.add_stat(
         session=session,
         user_id=user_id,
