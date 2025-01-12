@@ -11,31 +11,36 @@ from sqlalchemy.ext.asyncio import AsyncSession
 image = ImageGateway()
 
 async def get_images(session: AsyncSession, user_id: int) -> list[tuple[int, str, str]]:
-
     res = await ImageMemoryStatGateway.count_rounds(
         session=session,
         user_id_in=user_id
     )
+    check = await image.count_images(session=session)
+    images_count = images_in_round()
+
+    if (res * images_count + images_count) > check:
+        res = res % check
 
     if res % 5 == 0:
-
-        print("nes")
-
         res = await image.get_images(
             session=session,
-            filter_id=res*images_in_round(),
-            images_in_round=images_in_round()
+            filter_id=res*images_count,
+            images_in_round=images_count
         )
     else:
-
-        print("change")
-
         res = await image.get_images(
             session=session,
-            filter_id=res * images_in_round(),
-            images_in_round=images_in_round()
+            filter_id=res*images_count,
+            images_in_round=images_count
         )
 
     arr = [(i.id, get_site() + i.key, i.name_image) for i in res]
     return arr
 
+
+async def change_images(images: list[tuple]) -> list[tuple[int, str, str]]:
+    for i in range(len(images) - 2, len(images)):
+        images[i] = (images[i][0], images[i][1], "НЕ БЫЛО")
+    random.shuffle(images)
+
+    return images
