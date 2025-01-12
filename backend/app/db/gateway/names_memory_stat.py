@@ -42,10 +42,26 @@ class ImageMemoryStatGateway(Gateway[models.Names_Memory_Stat, internal_objects.
             for record in records_to_delete:
                 await session.delete(record)
             await session.commit()
-    #
-    # @classmethod
-    # async def user_exists(cls, session: AsyncSession, user_id_in: int):
-    #     result = await session.execute(
-    #         select(cls.model).where(cls.modeluser_id == user_id_in)
-    #     )
-    #     return result.scalars().first() is not None
+
+
+    @classmethod
+    async def score_answers(cls, session: AsyncSession, user_id_in: int):
+        correct = await session.execute(
+            select(func.sum(cls.model.correct_answers)).where(cls.model.user_id == user_id_in)
+        )
+        wrong = await session.execute(
+            select(func.sum(cls.model.wrong_answers)).where(cls.model.user_id == user_id_in)
+        )
+
+        correct_sum = correct.scalar() or 0
+        wrong_sum = wrong.scalar() or 0
+
+        return correct_sum, wrong_sum
+
+    @classmethod
+    async def count_unique_played_at(cls, session: AsyncSession, user_id_in: int):
+        unique_played_at_count = await session.execute(
+            select(func.count(func.distinct(cls.model.played_at))).where(cls.model.user_id == user_id_in)
+        )
+
+        return unique_played_at_count.scalar() or 0
