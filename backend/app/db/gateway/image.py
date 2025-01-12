@@ -1,4 +1,4 @@
-from sqlalchemy import select, func
+from sqlalchemy import select, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.db import models
@@ -36,16 +36,10 @@ class ImageGateway(Gateway[models.Image, internal_objects.ImageObject]):
 
         return total_images_count
 
-    # @classmethod
-    # async def get_images(cls, session: AsyncSession, filter_id: int, images_in_round: int):
-    #     result = await session.execute(
-    #         select(cls.model)
-    #         .filter(cls.model.id >= filter_id)
-    #         .limit(images_in_round)
-    #     )
-    #     guessed_images = result.scalars().all()
-    #
-    #     return cls.object.model_validate(guessed_images)
+    @classmethod
+    async def delete_all(cls, session: AsyncSession):
+        await session.execute(delete(cls.model))
+        await session.commit()
 
     async def get_images(cls, session: AsyncSession, filter_id: int, images_in_round: int):
         result = await session.execute(
@@ -55,18 +49,15 @@ class ImageGateway(Gateway[models.Image, internal_objects.ImageObject]):
         )
         guessed_images = result.scalars().all()
 
-        # Преобразуем каждый объект в словарь вручную
         image_dicts = [
             {
-                'id': image.id,  # Предположим, что у вашего объекта есть атрибут id
-                'key': image.key,  # Замените на ваши реальные атрибуты
-                'name_image': image.name_image,  # Замените на ваши реальные атрибуты
-                # Добавьте другие необходимые поля
+                'id': image.id,
+                'key': image.key,
+                'name_image': image.name_image,
             }
             for image in guessed_images
         ]
 
-        # Теперь передаем список словарей в модель валидации
         validated_images = [cls.object.model_validate(image_dict) for image_dict in image_dicts]
 
         return validated_images

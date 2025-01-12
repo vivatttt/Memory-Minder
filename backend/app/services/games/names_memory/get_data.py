@@ -19,7 +19,7 @@ async def get_images(session: AsyncSession, user_id: int) -> list[tuple[int, str
     images_count = images_in_round()
 
     if (res * images_count + images_count) > check:
-        res = res % check
+        res = ((res * images_count + images_count) % check) + 1
 
     if res % 5 == 0:
         res = await image.get_images(

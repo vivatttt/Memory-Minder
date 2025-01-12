@@ -1,10 +1,10 @@
 from aiogram import F, Router
 from aiogram import types
 from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery, InputFile
+from aiogram.types import InputMediaPhoto
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 import asyncio
-import random
 
 from frontend.bot.games.names_memory.keyboards import Keyboard, Continue, OptionsPlay, OptionsButtons, Agree
 from frontend.bot.games.names_memory.utils import with_game_slug
@@ -15,6 +15,7 @@ from frontend.bot.games.names_memory.states import NamesMemoryForm
 from backend.app.services.games.names_memory.get_data import get_images, change_images
 from backend.app.services.games.names_memory.const import images_in_round, asking_in_round
 from backend.app.services.games.names_memory.stats_scores import rounds, get_results_round
+from backend.app.services.games.names_memory.charts import scores
 from frontend.bot.base.texts import markdown
 
 router = Router()
@@ -38,11 +39,13 @@ async def game_started(message: Message, state: FSMContext, session: AsyncSessio
             f"➿➿🔺➿➿➿➿➿➿➿➿➿➿➿\n\n‼️Приветствуем вас в игре‼️\n      *{NamesMemoryGame.name}*\\!"
             f"\n\n➿➿➿➿➿➿➿➿➿➿➿🔻➿➿\n\n🔹Вы еще не играли в нее🔹\\, "
             f"но мы уверены\\, что вам понравится\\!\n\n"
-            f"Правила очень просты\\.\nСейчас вы получите 8 картинок с их названиями с интервалом в 3 секунды\\.\n"
+            f"Правила очень просты\\.\nСейчас вы получите несколько картинок с их "
+            f"названиями с интервалом в 3 секунды\\.\n"
             f"Вам необходимо запомнить как можно больше картинок и их названий за отведенное время\\."
             f" Затем вам будут предложены картинки\\, и вы должны вспомнить и написать их названия\\."
             f" Однако  вам могут попасться картинки\\, которые не были упомянуты в раунде\\, тогда напишите"
-            f" НЕ БЫЛО\\.☑️\n\n➿➿➿➿➿➿♦️♦️➿➿➿➿➿➿\n\nДумаю\\, ты со всем справишься\\!🥳\n🔸Давай начинать🔸\\!"
+            f" НЕ БЫЛО\\.☑️\n\n➿➿➿➿➿➿➿➿➿➿➿➿➿➿\n\n"
+            f"Думаю\\, вы со всем справитесь\\!🥳\n🔸Давайте начинать🔸\\!"
         )
         reply_markup = kb.options_buttons_first()
 
@@ -56,35 +59,37 @@ async def game_started(message: Message, state: FSMContext, session: AsyncSessio
 
 @router.callback_query(lambda callback: callback.data == with_game_slug(Continue.conti.name))
 async def continue_game(callback: CallbackQuery):
-
-    ''' Думаю добаавить тут удаление сообщений раунда '''
-
     await callback.message.answer(
-        f"_🧐А что будем делать дальше\\?🧐_",
+        f"_А что будем делать дальше\\?🧐_",
         parse_mode="MarkdownV2",
         reply_markup=kb.options_buttons()
     )
 
 @router.callback_query(lambda callback: callback.data == with_game_slug(OptionsButtons.stats.name))
 async def stats_game(callback: CallbackQuery, session: AsyncSession):
-
-    ''' добаавить тут stats '''
+    statist = await scores(session, user_id=callback.from_user.id)
 
     await callback.message.answer(
-        f"_СТАТИСТИКА\\!_",
-        parse_mode="MarkdownV2",
-        reply_markup=kb.options_buttons()
+        f"    _📈СТАТИСТИКА📉_",
+        parse_mode="HTML",
+        reply_markup=kb.statistic(statist)
     )
 
 @router.callback_query(lambda callback: callback.data == with_game_slug(OptionsButtons.rules.name))
 async def rules_game(callback: CallbackQuery):
 
-    ''' Расписать правила '''
+    await callback.answer(
+        f"Выводятся картинки с названиями через каждые 3 секунды.\n\nЗатем вам предложат "
+        f"картинки, необходимо написать их названия.\n\nНекоторые не были показаны, тогда ответ - НЕ БЫЛО.\n✅✅✅",
+        show_alert=True
+    )
+
+    rules_text = "_А что будем делать дальше\\?🌺_"
 
     await callback.message.answer(
-        f"_А что будем делать дальше\\? Правила\\!_",
+        rules_text,
         parse_mode="MarkdownV2",
-        reply_markup=kb.options_buttons()
+        reply_markup=kb.options_buttons(),
     )
 
 @router.callback_query(lambda callback: callback.data == with_game_slug(OptionsPlay.play.name))
@@ -95,7 +100,7 @@ async def playing(callback: CallbackQuery, state: FSMContext, session: AsyncSess
     await state.update_data(images=images)
 
     message = await callback.message.edit_text(
-        f"_Приготовились запоминать\\!\n🤫🤫🤫🤯🤯🤯🤫🤫🤫\nСейчас все начнётся\\!_",
+        f"_Приготовились запоминать\\!🤫\n\nСейчас все начнётся\\!🤯_",
         parse_mode="MarkdownV2",
         reply_markup=None,
     )
@@ -117,7 +122,7 @@ async def playing(callback: CallbackQuery, state: FSMContext, session: AsyncSess
                 caption=f"{image_title}\n",
             )
             message_ids.append(message.message_id)
-            await asyncio.sleep(2)
+            await asyncio.sleep(1)
             await callback.message.chat.delete_message(message.message_id)
         except:
             await callback.message.edit_text(
@@ -125,7 +130,7 @@ async def playing(callback: CallbackQuery, state: FSMContext, session: AsyncSess
                 parse_mode="MarkdownV2",
                 reply_markup=None,
             )
-            await asyncio.sleep(2)
+            await asyncio.sleep(1)
 
     message = await callback.message.edit_text(
         f"Ну что\\, теперь проверим\\?",
@@ -204,7 +209,7 @@ async def handle_user_answer(message: types.Message, state: FSMContext, session:
     else:
         results, arr = await get_results_round(session, id, images, answers)
         await message.answer(
-            f"🔥Раунд завершен\\!🔥\nВы ответили правильно {results} из {asking_in_round()}\\.\n\n"
+            f"Раунд завершен\\!🔥\nВы ответили правильно {results} из {asking_in_round()}\\.\n\n"
             f"Правильные ответы \\:\n{markdown(arr)}",
             parse_mode="MarkdownV2",
             reply_markup=kb.continue_button()

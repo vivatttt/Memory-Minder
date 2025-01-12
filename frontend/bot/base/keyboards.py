@@ -39,3 +39,22 @@ class BaseKeyboard:
 
         markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
         return markup
+
+    def statistic_keyboard(
+        self,
+        buttons,
+    ):
+        if not buttons:
+            raise ValueError("Список кнопок не может быть пустым")
+
+        keyboard = []
+
+        for button in buttons:
+            if isinstance(button, list):
+                keyboard.append([InlineKeyboardButton(text=btn, callback_data=btn) for btn in button])
+            else:
+                keyboard.append([InlineKeyboardButton(text=button, callback_data=button)])
+
+        markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+        return markup
+

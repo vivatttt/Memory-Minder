@@ -9,14 +9,6 @@ import re
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-# async def write_stats(session: AsyncSession, user_id: int, won: bool) -> None:
-#     await FalseStateStatsGateway.create_record(session=session, user_id=user_id, won=won)
-#
-# async def get_game_stats(session: AsyncSession, user_id: int) -> tuple[int]:
-#     won_count = await FalseStateStatsGateway.get_records_count(session=session, user_id=user_id, won=True)
-#     lost_count = await FalseStateStatsGateway.get_records_count(session=session, user_id=user_id, won=False)
-#     return won_count, lost_count
-
 async def rounds(session: AsyncSession, user_id: int) -> int:
 
     res = await ImageMemoryStatGateway.count_rounds(
@@ -29,8 +21,8 @@ async def get_results_round(session: AsyncSession, user_id: int, images: list[tu
     result = 0
 
     for i, y in zip(images, answers):
-        cleaned_image_name = ''.join(re.findall(r'[a-zA-Zа-яА-Я0-9]', i[2].lower()))
-        cleaned_expected_name = ''.join(re.findall(r'[a-zA-Zа-яА-Я0-9]', y.lower()))
+        cleaned_image_name = ''.join(re.findall(r'[a-zA-Zа-яА-Я0-9]', i[2].lower().replace('ё', 'е')))
+        cleaned_expected_name = ''.join(re.findall(r'[a-zA-Zа-яА-Я0-9]', y.lower().replace('ё', 'е')))
         if cleaned_image_name == cleaned_expected_name:
             result += 1
         else:
