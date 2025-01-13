@@ -20,7 +20,5 @@ async def fill_image(csv_file_path: str):
 
 
 if __name__ == "__main__":
-    csv_file_path = 'backend/scripts/images.csv'
+    csv_file_path = 'backend/app/db/data/images.csv'
     asyncio.run(fill_image(csv_file_path))
-
-    # poetry run python - m backend.scripts.__init__

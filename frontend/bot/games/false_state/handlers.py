@@ -56,7 +56,7 @@ async def return_back(callback: CallbackQuery):
 async def handle_play(callback: CallbackQuery):
     await callback.message.edit_text(
         f"""_Придумываем новый текст{escape_markdown_v2("...")}_
-clУ вас будет *3 минуты* чтобы прочитать его и запомнить ключевые моменты""",
+У вас будет *3 минуты* чтобы прочитать его и запомнить ключевые моменты""",
         parse_mode="MarkdownV2",
         reply_markup=None,
     )
