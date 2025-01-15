@@ -1,6 +1,5 @@
 from backend.app.db.gateway import ImageMemoryStatGateway
 import matplotlib.pyplot as plt
-from io import BytesIO
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
