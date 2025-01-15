@@ -65,3 +65,13 @@ class ImageMemoryStatGateway(Gateway[models.Names_Memory_Stat, internal_objects.
         )
 
         return unique_played_at_count.scalar() or 0
+
+    @classmethod
+    async def get_unique_played_at_dates(cls, session: AsyncSession, user_id_in: int):
+        result = await session.execute(
+            select(cls.model.played_at, func.count()).where(cls.model.user_id == user_id_in).group_by(
+                cls.model.played_at)
+        )
+        dates_count = {date: count for date, count in result}
+
+        return dates_count

@@ -1,7 +1,5 @@
-from backend.app.db.gateway import ImageGateway
 from backend.app.db.gateway import ImageMemoryStatGateway
 from backend.app.db.gateway import ViewedImageGateway
-from backend.app.db.connection import get_session
 from backend.app.services.games.names_memory.const import images_in_round, asking_in_round
 from datetime import datetime
 import re
@@ -26,8 +24,7 @@ async def get_results_round(session: AsyncSession, user_id: int, images: list[tu
         if cleaned_image_name == cleaned_expected_name:
             result += 1
         else:
-            continue
-            # await ViewedImageGateway.add_not_guessed_image(session=session, user_id=user_id, image_id=i[0], used_in_game=5, correct=2)
+            await ViewedImageGateway.add_not_guessed_image(session=session, user_id=user_id, image_id=i[0])
 
     await ImageMemoryStatGateway.add_stat(
         session=session,

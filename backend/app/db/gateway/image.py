@@ -41,6 +41,7 @@ class ImageGateway(Gateway[models.Image, internal_objects.ImageObject]):
         await session.execute(delete(cls.model))
         await session.commit()
 
+    @classmethod
     async def get_images(cls, session: AsyncSession, filter_id: int, images_in_round: int):
         result = await session.execute(
             select(cls.model)
@@ -61,3 +62,22 @@ class ImageGateway(Gateway[models.Image, internal_objects.ImageObject]):
         validated_images = [cls.object.model_validate(image_dict) for image_dict in image_dicts]
 
         return validated_images
+
+    @classmethod
+    async def get_image_by_id(cls, session: AsyncSession, filter_id: int):
+        result = await session.execute(
+            select(cls.model)
+            .filter(cls.model.id == filter_id)
+            .limit(1)
+        )
+        guessed_image = result.scalar()
+
+        image_dict = {
+            'id': guessed_image.id,
+            'key': guessed_image.key,
+            'name_image': guessed_image.name_image,
+        }
+
+        validated_image = cls.object.model_validate(image_dict)
+
+        return validated_image

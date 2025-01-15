@@ -9,5 +9,3 @@ class Viewed_Image(DeclarativeBase):
     id = Column(INTEGER(), primary_key=True, autoincrement=True)
     user_id = Column(BIGINT(), nullable=False)
     image_id = Column(INTEGER(), nullable=False)
-    used_in_game = Column(INTEGER(), nullable=False)
-    correct = Column(INTEGER(), nullable=False)

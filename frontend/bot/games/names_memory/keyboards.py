@@ -1,5 +1,3 @@
-from frontend.bot.base.keyboards import BaseKeyboard
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from frontend.bot.main_menu.keyboards import ReturnHomeButtons
 from frontend.bot.base.keyboards import BaseKeyboard
 from frontend.bot.games.names_memory.utils import with_game_slug
@@ -57,10 +55,8 @@ class Keyboard(BaseKeyboard):
     def statistic(self, stats):
         buttons = [
             f"{self.escape_html(str(stats[0]))}  раундов было сыграно",
-            f"{self.escape_html(str(stats[1]))}  правильных ответов",
-            f"{self.escape_html(str(stats[2]))}  неправильных ответов",
-            f"{self.escape_html(str(stats[3]))}%  ваш процент успеваемости",
-            f"{self.escape_html(str(stats[4]))}  количество дней ваших игр",
+            f"{self.escape_html(str(stats[1]))}%  ваш процент успеваемости",
+            f"{self.escape_html(str(stats[2]))}  количество дней ваших игр",
         ]
 
         keyboard = [
