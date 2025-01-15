@@ -10,13 +10,16 @@ async def fill_image(csv_file_path: str):
 
         with open(csv_file_path, mode='r', newline='', encoding='utf-8') as csvfile:
             csv_reader = csv.reader(csvfile)
-            next(csv_reader, None)
+            header = next(csv_reader)
+            rows = list(csv_reader)
 
-            for row in csv_reader:
-                key = row[1]
-                name_image = row[2]
+        sorted_rows = sorted(rows, key=lambda row: len(row[-1]))
 
-                await stat.add_image(session=session, key=key, name_image=name_image)
+        for row in sorted_rows:
+            key = row[1]
+            name_image = row[2]
+
+            await stat.add_image(session=session, key=key, name_image=name_image)
 
 
 if __name__ == "__main__":
