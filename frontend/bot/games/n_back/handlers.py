@@ -98,20 +98,21 @@ async def results_game(callback: CallbackQuery):
         reply_markup=kb.game_menu(),
     )
 
-
 # Указываем путь к JSON-файлу
-DATA_FILE = "frontend/bot/games/n_back/user_data.json"
+DATA_FILE = "user_data.json"
+project_root = os.path.dirname(os.path.abspath(__file__))
+path_to_file = os.path.join(project_root, DATA_FILE)
 
 def load_user_data():
     """Загружает данные пользователей из JSON-файла."""
-    if not os.path.exists(DATA_FILE):
+    if not os.path.exists(path_to_file):
         return {}
-    with open(DATA_FILE, "r", encoding="utf-8") as file:
+    with open(path_to_file, "r", encoding="utf-8") as file:
         return json.load(file)
 
 def save_user_data(data):
     """Сохраняет данные пользователей в JSON-файле."""
-    with open(DATA_FILE, "w", encoding="utf-8") as file:
+    with open(path_to_file, "w", encoding="utf-8") as file:
         json.dump(data, file, indent=4, ensure_ascii=False)
 
 @router.callback_query(lambda callback: callback.data == with_game_slug(GameMenuButtons.N.name))
