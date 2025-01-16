@@ -13,6 +13,7 @@ class Statements(BaseModel):
     wrong_inds: set[int]
     text: str
     num: int
+    arr: list[str]
 
 class GameData(BaseModel):
     text: str

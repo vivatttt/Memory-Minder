@@ -9,19 +9,21 @@ def shuffle_statements(wrong: list[str], correct: list[str]) -> tuple[set[int], 
     random.shuffle(combined)
     wrong_statements_set = set(wrong)
     statements_string = ""
+    statements_arr = []
     wrong_inds = set()
     for i, statement in enumerate(combined):
         statements_string += f"{i + 1}. {statement}\n"
+        statements_arr.append(f"{i + 1}. {statement}")
         if statement in wrong_statements_set:
             wrong_inds.add(i + 1)
     return {
         "wrong_inds": wrong_inds,
+        "arr": statements_arr,
         "text": statements_string,
         "num": len(wrong) + len(correct)
     }
 
 def prepare_game_data(data: GameDataExternalModel) -> GameData:
-    print(*shuffle_statements(data.statements.wrong, data.statements.correct))
     return GameData(
         text=data.text,
         statements=Statements(
