@@ -64,7 +64,7 @@ async def continue_game(callback: CallbackQuery):
 
     clear_media_folder('backend/app/db/data/media')
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         f"_А что будем делать дальше\\?🧐_",
         parse_mode="MarkdownV2",
         reply_markup=kb.options_buttons()
@@ -102,7 +102,7 @@ async def rules_game(callback: CallbackQuery):
 
     rules_text = "_А что будем делать дальше\\?🌺_"
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         rules_text,
         parse_mode="MarkdownV2",
         reply_markup=kb.options_buttons(),
