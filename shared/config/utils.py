@@ -2,8 +2,8 @@ import os
 
 from dotenv import load_dotenv
 
-from backend.app.utils.exception import UnknownEnviromentError
 from shared.config.settings import DevelopmentSettings, ProductionSettings
+from shared.utils.exception import UnknownEnviromentError
 
 
 def get_settings() -> DevelopmentSettings | ProductionSettings:

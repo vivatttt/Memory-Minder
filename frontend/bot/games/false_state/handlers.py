@@ -1,17 +1,26 @@
 import asyncio
-from aiogram import F, Router
-from aiogram.filters import Command
-from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery
-from aiogram.fsm.context import FSMContext
 
+from aiogram import Router
+from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.app.services.games.false_state.stats import get_game_stats, write_stats
 from frontend.bot.base.texts import escape_markdown_v2
-from frontend.bot.games.false_state.utils import with_game_slug
-from frontend.bot.games.false_state.keyboards import Keyboard, GameMenuButtons, StatementsButtons, GameEndButtons
 from frontend.bot.games.false_state import FalseStateGame
-from frontend.bot.games.false_state.states import FalseStateForm
-from frontend.bot.games.false_state.middleware import Middleware
 from frontend.bot.games.false_state.data import get_new_user_game
 from frontend.bot.games.false_state.games import get_games, get_user_game
+from frontend.bot.games.false_state.keyboards import (
+    GameEndButtons,
+    GameMenuButtons,
+    Keyboard,
+    ReturnButtons,
+    StatementsButtons,
+)
+from frontend.bot.games.false_state.middleware import Middleware
+from frontend.bot.games.false_state.states import FalseStateForm
+from frontend.bot.games.false_state.utils import with_game_slug
+
 router = Router()
 router.message.middleware(Middleware())
 kb = Keyboard()
@@ -35,10 +44,19 @@ async def retry_game(callback: CallbackQuery):
         reply_markup=kb.game_menu(),
     )
 
+@router.callback_query(lambda callback : callback.data == with_game_slug(ReturnButtons.back.name))
+async def return_back(callback: CallbackQuery):
+    await callback.message.edit_text(
+        f"Вы попали в игру *{FalseStateGame.name}*\n_Выберите действие_",
+        parse_mode="MarkdownV2",
+        reply_markup=kb.game_menu(),
+    )
+
 @router.callback_query(lambda callback : callback.data == with_game_slug(GameMenuButtons.play.name))
 async def handle_play(callback: CallbackQuery):
     await callback.message.edit_text(
-        f"_Придумываем новый текст{escape_markdown_v2("...")}_\nУ вас будет *3 минуты* чтобы прочитать его и запомнить ключевые моменты",
+        f"""_Придумываем новый текст{escape_markdown_v2("...")}_
+У вас будет *3 минуты* чтобы прочитать его и запомнить ключевые моменты""",
         parse_mode="MarkdownV2",
         reply_markup=None,
     )
@@ -57,11 +75,39 @@ async def handle_play(callback: CallbackQuery):
     )
 
 
-@router.callback_query(lambda callback : callback.data.startswith(with_game_slug(StatementsButtons.change_statement.name)))
+@router.callback_query(lambda callback : callback.data == with_game_slug(GameMenuButtons.stats.name))
+async def handle_view_stats(callback: CallbackQuery, session: AsyncSession):
+    games_won, games_lost = await get_game_stats(
+        session=session,
+        user_id=callback.from_user.id
+    )
+    await callback.message.edit_text(
+        f"_Ваша статистика игр_\n*Выиграно* {games_won}\n*Проиграно* {games_lost}",
+        parse_mode="MarkdownV2",
+        reply_markup=kb.return_back(),
+    )
+
+@router.callback_query(lambda callback : callback.data == with_game_slug(GameMenuButtons.rules.name))
+async def handle_view_rules(callback: CallbackQuery):
+    await callback.message.edit_text(
+        "Тут скоро появятся правила игры",
+        parse_mode="MarkdownV2",
+        reply_markup=kb.return_back(),
+    )
+
+
+@router.callback_query(
+    lambda callback :
+        callback.data.startswith(
+            with_game_slug(
+                StatementsButtons.change_statement.name
+            )
+        )
+    )
 async def handle_select_statement(callback: CallbackQuery):
     user_game = get_user_game(callback.from_user.id)
     changed_statement = int(callback.data.split(":")[1])
-    
+
     if changed_statement not in user_game.choosen_wrong_inds:
         user_game.choosen_wrong_inds.add(changed_statement)
     else:
@@ -72,13 +118,18 @@ async def handle_select_statement(callback: CallbackQuery):
         parse_mode="MarkdownV2",
         reply_markup=kb.statements(user_game),
     )
-    
+
 
 @router.callback_query(lambda callback : callback.data == with_game_slug(StatementsButtons.send_statement.name))
-async def handle_check_statements(callback: CallbackQuery):
+async def handle_check_statements(callback: CallbackQuery, session: AsyncSession):
     user_game = get_user_game(callback.from_user.id)
     user_won = user_game.data.statements.wrong_inds == user_game.choosen_wrong_inds
     text = "Ура! Все верно!" if user_won else "Не совсем.."
+    await write_stats(
+        session=session,
+        user_id=callback.from_user.id,
+        won=user_won
+    )
     await callback.message.edit_text(
         escape_markdown_v2(text),
         parse_mode="MarkdownV2",

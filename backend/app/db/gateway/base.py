@@ -16,6 +16,6 @@ class Gateway(Generic[T, OBJ]):
     ) -> OBJ | None:
         try:
             res = await session.get(cls.model, id_)
-            return cls.model.model_validate(res)
+            return cls.object.model_validate(res)
         except Exception:
             return None

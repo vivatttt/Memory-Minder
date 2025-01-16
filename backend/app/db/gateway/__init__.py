@@ -1,7 +1,14 @@
-"""
+from backend.app.db.gateway.false_state_stats import FalseStateStatsGateway
+from backend.app.db.gateway.names_memory_stat import ImageMemoryStatGateway
+from backend.app.db.gateway.image import ImageGateway
+from backend.app.db.gateway.viewed_image import ViewedImageGateway
+from backend.app.db.gateway.user import UserGateway
 
-Гейтвей базы данных. Функции, предоставляющие доступ к данным бд.
-Ожидается минимальное количество бизнес-логики
-(не должно быть функций, которые внутри себя содержат полный рассчет данных для какого-либо сценария)
 
-"""
+__all__ = [
+    "UserGateway",
+    "FalseStateStatsGateway",
+    "ImageMemoryStatGateway",
+    "ImageGateway",
+    "ViewedImageGateway",
+]
