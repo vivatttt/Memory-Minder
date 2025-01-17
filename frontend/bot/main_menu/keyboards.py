@@ -6,21 +6,23 @@ from frontend.bot.games import GamesFactory
 
 class MainMenuButtons(Enum):
     select_game = "Выбрать игру"
-    view_statistics = "Посмотреть статистику"
     about = "Подробнее"
 
-class StartGameButtons(Enum):
-    play = "Играть"
 
 class ReturnHomeButtons(Enum):
     return_home = "В начало"
 
+game_started_prefix = "game_started"
+
 class Keyboard(BaseKeyboard):
     def main_menu(self):
-        return self.create_reply_keyboard([button.value for button in MainMenuButtons])
+        return self.create_inline_keyboard([(button.value, button.name) for button in MainMenuButtons])
 
-    def play(self):
-        return self.create_reply_keyboard([StartGameButtons.play.value])
+    def back_home(self):
+        return self.create_inline_keyboard([(button.value, button.name) for button in ReturnHomeButtons])
 
     def game_selection(self):
-        return self.create_inline_keyboard(GamesFactory().names_and_slugs, row_width=2)
+        buttons = GamesFactory().names_and_slugs
+        for i in range(len(buttons)):
+            buttons[i][1] = game_started_prefix + "_" + buttons[i][1]
+        return self.create_inline_keyboard(buttons, row_width=2)

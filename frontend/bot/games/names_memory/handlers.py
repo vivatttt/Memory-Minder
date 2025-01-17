@@ -17,6 +17,7 @@ from backend.app.services.games.names_memory.stats_scores import rounds, get_res
 from backend.app.services.games.names_memory.charts import scores_answers, date_game, scores
 from frontend.bot.base.texts import markdown
 from frontend.bot.base.clean_folder import clear_media_folder
+from frontend.bot.main_menu.keyboards import game_started_prefix
 
 router = Router()
 router.message.middleware(Middleware())
@@ -24,8 +25,8 @@ kb = Keyboard()
 
 
 
-@router.message(NamesMemoryForm.game_started)
-async def game_started(message: Message, state: FSMContext, session: AsyncSession):
+@router.callback_query(lambda callback: callback.data == NamesMemoryGame.add_prefix(game_started_prefix))
+async def game_started(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
 
     data = await state.get_data()
     id = data.get('id')
@@ -51,7 +52,7 @@ async def game_started(message: Message, state: FSMContext, session: AsyncSessio
         )
         reply_markup = kb.options_buttons_first()
 
-    await message.answer(
+    await callback.message.answer(
         welcome_text,
         parse_mode="MarkdownV2",
         reply_markup=reply_markup

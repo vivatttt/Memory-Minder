@@ -21,7 +21,7 @@ class GamesFactory:
 
     @property
     def names_and_slugs(self) -> list[dict[str]]:
-        return [(config.name, config.slug) for config in self._map.values()]
+        return [[config.name, config.slug] for config in self._map.values()]
 
     def names(self, slug: str) -> list[str]:
         return [config.name for config in self._map.get(slug, [])]

@@ -9,3 +9,7 @@ class BaseGame:
     name: str
     slug: str
     form: Type[StatesGroup]
+    
+    @classmethod
+    def add_prefix(cls, pr: str):
+        return f"{pr}_{cls.slug}"

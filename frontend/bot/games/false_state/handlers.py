@@ -18,7 +18,7 @@ from frontend.bot.games.false_state.keyboards import (
     StatementsButtons,
 )
 from frontend.bot.games.false_state.middleware import Middleware
-from frontend.bot.games.false_state.states import FalseStateForm
+from frontend.bot.main_menu.keyboards import game_started_prefix
 from frontend.bot.games.false_state.utils import with_game_slug, get_explain_user_wrong
 
 router = Router()
@@ -28,9 +28,9 @@ kb = Keyboard()
 games = get_games()
 
 
-@router.message(FalseStateForm.game_started)
-async def game_started(message: Message, state: FSMContext):
-    await message.answer(
+@router.callback_query(lambda callback: callback.data == FalseStateGame.add_prefix(game_started_prefix))
+async def game_started(callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer(
         f"Вы попали в игру *{FalseStateGame.name}*\n_Выберите действие_",
         parse_mode="MarkdownV2",
         reply_markup=kb.game_menu(),

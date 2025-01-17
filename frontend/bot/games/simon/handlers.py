@@ -1,15 +1,17 @@
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.methods import answer_callback_query
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, \
-    update
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 
 from frontend.bot.games.simon import SimonGame
+from frontend.bot.games.simon.states import SimonForm
 from frontend.bot.games.simon.keyboards import Keyboard
+from frontend.bot.main_menu.keyboards import Keyboard as MainMenuKeyboard
 from frontend.bot.games.simon.middleware import Middleware
 from frontend.bot.main_menu.states import MainMenuForm
+from frontend.bot.main_menu.keyboards import game_started_prefix
 
 from random import choice
 import asyncio
@@ -17,10 +19,10 @@ import asyncio
 router = Router()
 router.message.middleware(Middleware())
 kb = Keyboard()
+main_menu_kb = MainMenuKeyboard()
 
-
-@router.message(SimonForm.game_started)
-async def game_started(message: Message, state: FSMContext):
+@router.callback_query(lambda callback: callback.data == SimonGame.add_prefix(game_started_prefix))
+async def game_started(callback: CallbackQuery, state: FSMContext):
     keyboard = [
         [KeyboardButton(text="Начать игру")],
         [KeyboardButton(text="Описание игры")],
@@ -28,7 +30,7 @@ async def game_started(message: Message, state: FSMContext):
     ]
     start_text = f"Добро пожаловать в игру *{SimonGame.name}*\\.\n" \
                  f"Пожалуйста, выберите действие во всплывающем меню\\."
-    await message.answer(
+    await callback.message.answer(
         text=start_text,
         parse_mode="MarkdownV2",
         reply_markup=ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True)
@@ -63,6 +65,11 @@ async def get_command(message: Message, state: FSMContext):
             reply_markup=ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
     elif message.text == "Выйти из игры":
+        await message.answer(
+            "Добро пожаловать в *MemoryMinder*\n_Выберите действие_",
+            parse_mode="MarkdownV2",
+            reply_markup=main_menu_kb.main_menu()
+        )
         await state.set_state(MainMenuForm.started)
     elif message.text != "Продолжить игру":
         await message.answer("Неизвестная команда. Повтори ввод, пожалуйста.")

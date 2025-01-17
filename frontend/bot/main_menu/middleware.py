@@ -31,11 +31,13 @@ class AuthorizationMiddleware(BaseMiddleware):
             data: Dict[str, Any],
     ) -> Any:
         session = data["session"]
-
+    
         if event.message:
-            user_id = event.message.from_user.id
+            event_msg = event.message
+            user_id = event_msg.from_user.id
         elif event.callback_query:
-            user_id = event.callback_query.from_user.id
+            event_msg = event.callback_query
+            user_id = event_msg.from_user.id
         else:
             raise UnknownUpdateTypeError
 

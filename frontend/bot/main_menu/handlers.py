@@ -63,7 +63,7 @@ async def command_start(message: Message, state: FSMContext):
 
 @router.callback_query(lambda callback : callback.data == ReturnHomeButtons.return_home.name)
 async def handle_home(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer(
+    await callback.message.edit_text(
         "Добро пожаловать в *MemoryMinder*\n_Выберите действие_",
         parse_mode="MarkdownV2",
         reply_markup=kb.main_menu()
@@ -72,47 +72,36 @@ async def handle_home(callback: CallbackQuery, state: FSMContext):
 
 
 
-@router.message(F.text == MainMenuButtons.view_statistics.value)
-async def view_statistics(message: Message, state: FSMContext):
+@router.callback_query(lambda callback : callback.data == MainMenuButtons.select_game.name)
+async def handle_select_game(callback: CallbackQuery, state: FSMContext):
     if await state.get_state() != MainMenuForm.started:
         return
-    await message.answer(
-        "Тут скоро будет статистика ваших игр",
-        reply_markup=ReplyKeyboardRemove()
-    )
-    await state.set_state(MainMenuForm.view_statistics)
-
-
-@router.message(F.text == MainMenuButtons.select_game.value)
-async def select_game(message: Message, state: FSMContext):
-    if await state.get_state() != MainMenuForm.started:
-        return
-    await message.answer(
+    await callback.message.edit_text(
         "Выберите игру",
         reply_markup=kb.game_selection()
     )
     await state.set_state(MainMenuForm.select_game)
 
 
-@router.message(F.text == MainMenuButtons.about.value)
-async def about(message: Message, state: FSMContext):
+@router.callback_query(lambda callback : callback.data == MainMenuButtons.about.name)
+async def handle_about(callback: CallbackQuery, state: FSMContext):
     if await state.get_state() != MainMenuForm.started:
         return
-    await message.answer(
+    await callback.message.edit_text(
         "Тут скоро будет подробная информация о возможностях бота",
-        reply_markup=ReplyKeyboardRemove()
+        reply_markup=kb.back_home()
     )
     await state.set_state(MainMenuForm.about)
 
 
-@router.callback_query(lambda callback: callback.data in games_config.slugs)
-async def handle_game_selection(callback: CallbackQuery, state: FSMContext):
-    """Классы для каждой из игр имеют общее состояние входа - game_started"""
-    game = games_config.get(callback.data)
-    await state.set_state(game.form.game_started)
-    await state.update_data(id=callback.from_user.id)
-    await callback.message.answer(
-        f"Выбрана игра {game.name}\n_Нажмите чтобы начать_",
-        parse_mode="MarkdownV2",
-        reply_markup=kb.play(),
-    )
+# @router.callback_query(lambda callback: callback.data in games_config.slugs)
+# async def handle_game_selection(callback: CallbackQuery, state: FSMContext):
+#     """Классы для каждой из игр имеют общее состояние входа - game_started"""
+#     game = games_config.get(callback.data)
+#     await state.set_state(game.form.game_started)
+#     await state.update_data(id=callback.from_user.id)
+#     await callback.message.answer(
+#         f"Выбрана игра {game.name}\n_Нажмите чтобы начать_",
+#         parse_mode="MarkdownV2",
+#         reply_markup=kb.play(),
+#     )

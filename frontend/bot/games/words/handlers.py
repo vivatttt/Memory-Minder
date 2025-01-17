@@ -1,6 +1,6 @@
 import asyncio
 
-from aiogram import Router, F
+from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
@@ -10,6 +10,7 @@ from frontend.bot.games.words.middleware import Middleware
 from frontend.bot.games.words.states import WordsForm
 from frontend.bot.games.words.utils import with_game_slug
 from frontend.bot.games.words.gameplay import GameLogic
+from frontend.bot.main_menu.keyboards import game_started_prefix
 
 router = Router()
 router.message.middleware(Middleware())
@@ -17,9 +18,9 @@ kb = Keyboard()
 game_logic = GameLogic()
 
 
-@router.message(WordsForm.game_started)
-async def game_started(message: Message, state: FSMContext):
-    await message.answer(
+@router.callback_query(lambda callback: callback.data == WordsGame.add_prefix(game_started_prefix))
+async def game_started(callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer(
         f"Вы попали в игру *{WordsGame.name}*\n_Выберите действие_",
         parse_mode="MarkdownV2",
         reply_markup=kb.start_menu(),

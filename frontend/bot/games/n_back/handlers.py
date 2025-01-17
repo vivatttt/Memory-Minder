@@ -7,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 import json
 import os
 
+from frontend.bot.main_menu.keyboards import game_started_prefix
 from frontend.bot.games.n_back.utils import with_game_slug
 from frontend.bot.games.n_back.keyboards import Keyboard, GameEndButtons, GameMenuButtons, NumbersButtons
 from frontend.bot.games.n_back import NBackGame
@@ -52,9 +53,9 @@ router = Router()
 router.message.middleware(Middleware())
 kb = Keyboard()
     
-@router.message(NBackForm.game_started)
-async def game_started(message: Message, state: FSMContext):
-    user_id = str(message.from_user.id)
+@router.callback_query(lambda callback : callback.data == NBackGame.add_prefix(game_started_prefix))
+async def game_started(callback: CallbackQuery, state: FSMContext):
+    user_id = str(callback.from_user.id)
     user_data = load_user_data()
     first_user = False
     if user_id not in user_data:
@@ -64,7 +65,7 @@ async def game_started(message: Message, state: FSMContext):
     save_user_data(user_data)
 
     if first_user:
-        await message.answer(
+        await callback.message.answer(
             f"Приветствую новенького любителя прокачать память🧐 Вы попали в игру *{NBackGame.name}*\." +
             f"\nВаше *N \= {n}*\. Если вы не понимаете что это, то советую для начала нажать на кнопку *Правила*\." +
             f"\n_Выберите действие_",
@@ -72,7 +73,7 @@ async def game_started(message: Message, state: FSMContext):
             reply_markup=kb.game_menu(),
         )
     else:
-        await message.answer(
+        await callback.message.answer(
             f"Вы попали в игру *{NBackGame.name}*\. Ваше *N \= {n}*\n_Выберите действие_",
             parse_mode="MarkdownV2",
             reply_markup=kb.game_menu(),
