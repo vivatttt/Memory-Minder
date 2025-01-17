@@ -93,11 +93,3 @@ async def game_description(callback: CallbackQuery):
         reply_markup=kb.return_back(),
     )
 
-
-@router.callback_query(lambda callback: callback.data == with_game_slug(StartGameButtons.statistics.name))
-async def view_statistics(callback: CallbackQuery):
-    await callback.message.edit_text(
-        "Здесь будет *статистика*",
-        parse_mode="MarkdownV2",
-        reply_markup=kb.return_back(),
-    )
