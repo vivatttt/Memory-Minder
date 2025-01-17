@@ -37,3 +37,4 @@ poetry.lock
 .ruff_cache
 
 api_key.*
+structure.txt

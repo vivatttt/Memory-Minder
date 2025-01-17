@@ -71,7 +71,7 @@ async def handle_play(callback: CallbackQuery):
         # parse_mode="MarkdownV2",
         reply_markup=None,
     )
-    await asyncio.sleep(1)
+    await asyncio.sleep(180)
     await callback.message.edit_text(
         f"Выберите все утверждения, которые считаете *неверными*\n{escape_markdown_v2(user_game.data.statements.text)}",
         parse_mode="MarkdownV2",
