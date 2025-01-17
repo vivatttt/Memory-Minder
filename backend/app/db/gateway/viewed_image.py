@@ -1,4 +1,4 @@
-from sqlalchemy import select, func
+from sqlalchemy import select, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.db import models
@@ -11,13 +11,11 @@ class ViewedImageGateway(Gateway[models.Viewed_Image, internal_objects.ViewedIma
     object = internal_objects.ViewedImageObject
 
     @classmethod
-    async def add_not_guessed_image(cls, session: AsyncSession, user_id: int, image_id: int, used_in_game: int, correct: int):
+    async def add_not_guessed_image(cls, session: AsyncSession, user_id: int, image_id: int):
         session.add(
             cls.model(
                 user_id=user_id,
-                image_id=image_id,
-                used_in_game=used_in_game,
-                correct=correct
+                image_id=image_id
             )
         )
         await session.commit()
@@ -41,10 +39,17 @@ class ViewedImageGateway(Gateway[models.Viewed_Image, internal_objects.ViewedIma
             for record in records_to_delete:
                 await session.delete(record)
             await session.commit()
-    #
-    # @classmethod
-    # async def user_exists(cls, session: AsyncSession, user_id_in: int):
-    #     result = await session.execute(
-    #         select(cls.model).where(cls.modeluser_id == user_id_in)
-    #     )
-    #     return result.scalars().first() is not None
+
+    @classmethod
+    async def image_ids(cls, session: AsyncSession, user_id: int):
+        result = await session.execute(
+            select(cls.model.image_id).where(cls.model.user_id == user_id)
+        )
+        return result.scalars().all()
+
+    @classmethod
+    async def delete_image_ids(cls, session: AsyncSession, user_id: int):
+        await session.execute(
+            delete(cls.model).where(cls.model.user_id == user_id)
+        )
+        await session.commit()

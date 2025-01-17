@@ -1,7 +1,6 @@
-from aiogram import F, Router
+from aiogram import Router
 from aiogram import types
-from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery, InputFile
-from aiogram.types import InputMediaPhoto
+from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 import asyncio
@@ -15,12 +14,15 @@ from frontend.bot.games.names_memory.states import NamesMemoryForm
 from backend.app.services.games.names_memory.get_data import get_images, change_images
 from backend.app.services.games.names_memory.const import images_in_round, asking_in_round
 from backend.app.services.games.names_memory.stats_scores import rounds, get_results_round
-from backend.app.services.games.names_memory.charts import scores
+from backend.app.services.games.names_memory.charts import scores_answers, date_game, scores
 from frontend.bot.base.texts import markdown
+from frontend.bot.base.clean_folder import clear_media_folder
 
 router = Router()
 router.message.middleware(Middleware())
 kb = Keyboard()
+
+
 
 @router.message(NamesMemoryForm.game_started)
 async def game_started(message: Message, state: FSMContext, session: AsyncSession):
@@ -59,7 +61,10 @@ async def game_started(message: Message, state: FSMContext, session: AsyncSessio
 
 @router.callback_query(lambda callback: callback.data == with_game_slug(Continue.conti.name))
 async def continue_game(callback: CallbackQuery):
-    await callback.message.answer(
+
+    clear_media_folder('backend/app/db/data/media')
+
+    await callback.message.edit_text(
         f"_А что будем делать дальше\\?🧐_",
         parse_mode="MarkdownV2",
         reply_markup=kb.options_buttons()
@@ -67,6 +72,17 @@ async def continue_game(callback: CallbackQuery):
 
 @router.callback_query(lambda callback: callback.data == with_game_slug(OptionsButtons.stats.name))
 async def stats_game(callback: CallbackQuery, session: AsyncSession):
+
+    chart_buf = await scores_answers(session, user_id=callback.from_user.id)
+
+    photo = FSInputFile(chart_buf)
+    await callback.message.answer_photo(photo=photo, caption="Анализ ответов")
+
+
+    chart_buf = await date_game(session, user_id=callback.from_user.id)
+    photo = FSInputFile(chart_buf)
+    await callback.message.answer_photo(photo=photo, caption="Анализ дат игр")
+
     statist = await scores(session, user_id=callback.from_user.id)
 
     await callback.message.answer(
@@ -86,7 +102,7 @@ async def rules_game(callback: CallbackQuery):
 
     rules_text = "_А что будем делать дальше\\?🌺_"
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         rules_text,
         parse_mode="MarkdownV2",
         reply_markup=kb.options_buttons(),
@@ -96,11 +112,16 @@ async def rules_game(callback: CallbackQuery):
 async def playing(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     message_ids = []
 
-    images = await get_images(session, user_id=callback.from_user.id)
+    images, mistakes = await get_images(session=session, user_id=callback.from_user.id)
     await state.update_data(images=images)
 
-    message = await callback.message.edit_text(
-        f"_Приготовились запоминать\\!🤫\n\nСейчас все начнётся\\!🤯_",
+    if mistakes:
+        text = f"_Приготовились запоминать\\!🤫\n\nНазвания все усложняются\\!🤯_"
+    else:
+        text = f"_У вас было много ошибок\\!🤫\n\nДавайте исправим их\\!🤯_"
+
+    await callback.message.edit_text(
+        text=text,
         parse_mode="MarkdownV2",
         reply_markup=None,
     )
@@ -122,7 +143,7 @@ async def playing(callback: CallbackQuery, state: FSMContext, session: AsyncSess
                 caption=f"{image_title}\n",
             )
             message_ids.append(message.message_id)
-            await asyncio.sleep(1)
+            await asyncio.sleep(5)
             await callback.message.chat.delete_message(message.message_id)
         except:
             await callback.message.edit_text(
@@ -130,7 +151,7 @@ async def playing(callback: CallbackQuery, state: FSMContext, session: AsyncSess
                 parse_mode="MarkdownV2",
                 reply_markup=None,
             )
-            await asyncio.sleep(1)
+            await asyncio.sleep(3)
 
     message = await callback.message.edit_text(
         f"Ну что\\, теперь проверим\\?",
@@ -146,7 +167,7 @@ async def playing(callback: CallbackQuery, state: FSMContext, session: AsyncSess
             pass
 
 @router.callback_query(lambda callback: callback.data == with_game_slug(Agree.agree.name))
-async def rules_game(callback: types.CallbackQuery, state: FSMContext, session: AsyncSession):
+async def agree_game(callback: types.CallbackQuery, state: FSMContext, session: AsyncSession):
     await state.set_state(NamesMemoryForm.waiting_for_answer.state)
     await state.update_data(question_index=0, answers=[])
 
@@ -215,3 +236,6 @@ async def handle_user_answer(message: types.Message, state: FSMContext, session:
             reply_markup=kb.continue_button()
         )
         await state.clear()
+
+
+

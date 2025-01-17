@@ -19,7 +19,7 @@ from frontend.bot.games.false_state.keyboards import (
 )
 from frontend.bot.games.false_state.middleware import Middleware
 from frontend.bot.games.false_state.states import FalseStateForm
-from frontend.bot.games.false_state.utils import with_game_slug
+from frontend.bot.games.false_state.utils import with_game_slug, get_explain_user_wrong
 
 router = Router()
 router.message.middleware(Middleware())
@@ -71,7 +71,7 @@ async def handle_play(callback: CallbackQuery):
         # parse_mode="MarkdownV2",
         reply_markup=None,
     )
-    await asyncio.sleep(5)
+    await asyncio.sleep(1)
     await callback.message.edit_text(
         f"Выберите все утверждения, которые считаете *неверными*\n{escape_markdown_v2(user_game.data.statements.text)}",
         parse_mode="MarkdownV2",
@@ -95,7 +95,14 @@ async def handle_view_stats(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(lambda callback: callback.data == with_game_slug(GameMenuButtons.rules.name))
 async def handle_view_rules(callback: CallbackQuery):
     await callback.message.edit_text(
-        "Тут скоро появятся правила игры",
+        """
+*Правила игры*
+
+Мы придумаем текст и дадим вам _3 минуты_, чтобы прочитать его и запомнить все ключевые моменты
+Потом мы покажем некоторые утверждения о тексте, часть из которых будет содержать ложную информацию
+
+Ваша задача найти и отметить все неправильные утверждения
+        """,
         parse_mode="MarkdownV2",
         reply_markup=kb.return_back(),
     )
@@ -130,13 +137,14 @@ async def handle_check_statements(callback: CallbackQuery, session: AsyncSession
     user_game = get_user_game(callback.from_user.id)
     user_won = user_game.data.statements.wrong_inds == user_game.choosen_wrong_inds
     text = "Ура! Все верно!" if user_won else "Не совсем.."
+    explain_user_wrong_text = get_explain_user_wrong(user_game.data.statements, user_game.choosen_wrong_inds) if not user_won else ""
     await write_stats(
         session=session,
         user_id=callback.from_user.id,
         won=user_won
     )
     await callback.message.edit_text(
-        escape_markdown_v2(text),
+        escape_markdown_v2(text) + explain_user_wrong_text,
         parse_mode="MarkdownV2",
         reply_markup=kb.end(),
     )
