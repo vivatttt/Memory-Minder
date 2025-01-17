@@ -21,6 +21,7 @@ langchain = "^0.3.14"
 langchain-community = "^0.3.14"
 kagglehub = "^0.3.6"
 yandex-cloud-ml-sdk = "^0.2.4"
+langchain-gigachat = "^0.3.3"
 
 
 [tool.poetry.group.dev.dependencies]

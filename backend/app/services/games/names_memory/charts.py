@@ -4,7 +4,7 @@ from backend.app.db.gateway import ViewedImageGateway
 from backend.app.db.connection import get_session
 from backend.app.services.games.names_memory.const import images_in_round, asking_in_round
 from datetime import datetime
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import io
 import re
 
