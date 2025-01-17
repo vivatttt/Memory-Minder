@@ -71,6 +71,7 @@ async def handle_home(callback: CallbackQuery, state: FSMContext):
     await state.set_state(MainMenuForm.started)
 
 
+
 @router.message(F.text == MainMenuButtons.view_statistics.value)
 async def view_statistics(message: Message, state: FSMContext):
     if await state.get_state() != MainMenuForm.started:

@@ -27,6 +27,7 @@ kb = Keyboard()
 
 games = get_games()
 
+
 @router.message(FalseStateForm.game_started)
 async def game_started(message: Message, state: FSMContext):
     await message.answer(
@@ -36,7 +37,8 @@ async def game_started(message: Message, state: FSMContext):
     )
     await state.clear()
 
-@router.callback_query(lambda callback : callback.data == with_game_slug(GameEndButtons.retry.name))
+
+@router.callback_query(lambda callback: callback.data == with_game_slug(GameEndButtons.retry.name))
 async def retry_game(callback: CallbackQuery):
     await callback.message.edit_text(
         f"Вы попали в игру *{FalseStateGame.name}*\n_Выберите действие_",
@@ -44,7 +46,8 @@ async def retry_game(callback: CallbackQuery):
         reply_markup=kb.game_menu(),
     )
 
-@router.callback_query(lambda callback : callback.data == with_game_slug(ReturnButtons.back.name))
+
+@router.callback_query(lambda callback: callback.data == with_game_slug(ReturnButtons.back.name))
 async def return_back(callback: CallbackQuery):
     await callback.message.edit_text(
         f"Вы попали в игру *{FalseStateGame.name}*\n_Выберите действие_",
@@ -52,7 +55,8 @@ async def return_back(callback: CallbackQuery):
         reply_markup=kb.game_menu(),
     )
 
-@router.callback_query(lambda callback : callback.data == with_game_slug(GameMenuButtons.play.name))
+
+@router.callback_query(lambda callback: callback.data == with_game_slug(GameMenuButtons.play.name))
 async def handle_play(callback: CallbackQuery):
     await callback.message.edit_text(
         f"""_Придумываем новый текст{escape_markdown_v2("...")}_
@@ -75,7 +79,7 @@ async def handle_play(callback: CallbackQuery):
     )
 
 
-@router.callback_query(lambda callback : callback.data == with_game_slug(GameMenuButtons.stats.name))
+@router.callback_query(lambda callback: callback.data == with_game_slug(GameMenuButtons.stats.name))
 async def handle_view_stats(callback: CallbackQuery, session: AsyncSession):
     games_won, games_lost = await get_game_stats(
         session=session,
@@ -87,7 +91,8 @@ async def handle_view_stats(callback: CallbackQuery, session: AsyncSession):
         reply_markup=kb.return_back(),
     )
 
-@router.callback_query(lambda callback : callback.data == with_game_slug(GameMenuButtons.rules.name))
+
+@router.callback_query(lambda callback: callback.data == with_game_slug(GameMenuButtons.rules.name))
 async def handle_view_rules(callback: CallbackQuery):
     await callback.message.edit_text(
         """
@@ -104,13 +109,13 @@ async def handle_view_rules(callback: CallbackQuery):
 
 
 @router.callback_query(
-    lambda callback :
-        callback.data.startswith(
-            with_game_slug(
-                StatementsButtons.change_statement.name
-            )
+    lambda callback:
+    callback.data.startswith(
+        with_game_slug(
+            StatementsButtons.change_statement.name
         )
     )
+)
 async def handle_select_statement(callback: CallbackQuery):
     user_game = get_user_game(callback.from_user.id)
     changed_statement = int(callback.data.split(":")[1])
@@ -127,7 +132,7 @@ async def handle_select_statement(callback: CallbackQuery):
     )
 
 
-@router.callback_query(lambda callback : callback.data == with_game_slug(StatementsButtons.send_statement.name))
+@router.callback_query(lambda callback: callback.data == with_game_slug(StatementsButtons.send_statement.name))
 async def handle_check_statements(callback: CallbackQuery, session: AsyncSession):
     user_game = get_user_game(callback.from_user.id)
     user_won = user_game.data.statements.wrong_inds == user_game.choosen_wrong_inds

@@ -1,5 +1,14 @@
 from backend.app.db.gateway import ImageMemoryStatGateway
+from backend.app.db.gateway import ViewedImageGateway
+from backend.app.db.connection import get_session
+from backend.app.services.games.names_memory.const import images_in_round, asking_in_round
+from datetime import datetime
+# import matplotlib.pyplot as plt
+import io
+import re
+
 import matplotlib.pyplot as plt
+
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
