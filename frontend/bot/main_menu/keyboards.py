@@ -8,6 +8,10 @@ class MainMenuButtons(Enum):
     select_game = "Выбрать игру"
     about = "Подробнее"
 
+class MainMenuButtonsAdmin(Enum):
+    select_game = "Выбрать игру"
+    about = "Подробнее"
+    send = "Рассылка"
 
 class ReturnHomeButtons(Enum):
     return_home = "В начало"
@@ -17,6 +21,9 @@ game_started_prefix = "game_started"
 class Keyboard(BaseKeyboard):
     def main_menu(self):
         return self.create_inline_keyboard([(button.value, button.name) for button in MainMenuButtons])
+
+    def main_menu_admin(self):
+        return self.create_inline_keyboard([(button.value, button.name) for button in MainMenuButtonsAdmin])
 
     def back_home(self):
         return self.create_inline_keyboard([(button.value, button.name) for button in ReturnHomeButtons])

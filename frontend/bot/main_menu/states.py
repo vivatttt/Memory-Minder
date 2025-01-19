@@ -6,6 +6,7 @@ class MainMenuForm(StatesGroup):
     about = State()
     select_game = State()
     view_statistics = State()
+    send = State()
 
 class AuthorizationForm(StatesGroup):
     waiting_for_name = State()

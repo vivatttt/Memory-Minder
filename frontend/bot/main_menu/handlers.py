@@ -9,9 +9,11 @@ from backend.app.utils.authorization import authorize_user
 from frontend.bot.base.texts import escape_markdown_v2
 
 from frontend.bot.games import GamesFactory
-from frontend.bot.main_menu.keyboards import Keyboard, MainMenuButtons, ReturnHomeButtons
+from frontend.bot.main_menu.keyboards import Keyboard, MainMenuButtons, ReturnHomeButtons, MainMenuButtonsAdmin
 from frontend.bot.main_menu.states import AuthorizationForm, MainMenuForm
 from frontend.bot.main_menu.utils import is_valid_user_name
+from backend.app.services.users.admin import check_info, get_id
+from shared.config import get_settings
 
 router = Router()
 kb = Keyboard()
@@ -30,19 +32,29 @@ async def handle_authorization(message: Message, state: FSMContext, session: Asy
     name = message.text
     name_is_valid = is_valid_user_name(name)
     if name_is_valid:
+        settings = get_settings()
+
+        admin = False
+        if message.from_user.id == settings.ADMIN:
+            admin = True
         await authorize_user(
             session=session,
             user=UserObject(
                 id=message.from_user.id,
                 name=name,
                 username=message.from_user.username,
-                is_admin=False
+                is_admin=admin
             )
         )
+        if admin:
+            reply_markup = kb.main_menu_admin()
+        else:
+            reply_markup = kb.main_menu()
+
         await message.answer(
             f"{escape_markdown_v2(name)}, добро пожаловать в *MemoryMinder*\n_Выберите действие_",
             parse_mode="MarkdownV2",
-            reply_markup=kb.main_menu()
+            reply_markup=reply_markup
         )
         await state.set_state(MainMenuForm.started)
     else:
@@ -52,21 +64,31 @@ async def handle_authorization(message: Message, state: FSMContext, session: Asy
         )
 
 @router.message(Command("start"))
-async def command_start(message: Message, state: FSMContext):
+async def command_start(message: Message, state: FSMContext, session: AsyncSession):
+    if await check_info(session=session, id=message.from_user.id):
+        reply_markup = kb.main_menu_admin()
+    else:
+        reply_markup = kb.main_menu()
+
     await message.answer(
         "Добро пожаловать в *MemoryMinder*\n_Выберите действие_",
         parse_mode="MarkdownV2",
-        reply_markup=kb.main_menu()
+        reply_markup=reply_markup
     )
     await state.set_state(MainMenuForm.started)
 
 
 @router.callback_query(lambda callback : callback.data == ReturnHomeButtons.return_home.name)
-async def handle_home(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text(
+async def handle_home(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if await check_info(session=session, id=callback.from_user.id):
+        reply_markup = kb.main_menu_admin()
+    else:
+        reply_markup = kb.main_menu()
+
+    await callback.message.answer(
         "Добро пожаловать в *MemoryMinder*\n_Выберите действие_",
         parse_mode="MarkdownV2",
-        reply_markup=kb.main_menu()
+        reply_markup=reply_markup
     )
     await state.set_state(MainMenuForm.started)
 
@@ -95,6 +117,35 @@ async def handle_about(callback: CallbackQuery, state: FSMContext):
         reply_markup=kb.back_home()
     )
     await state.set_state(MainMenuForm.about)
+
+@router.callback_query(lambda callback : callback.data == MainMenuButtonsAdmin.send.name)
+async def send_about(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(
+        f"Введите сообщение для рассылки!",
+    )
+    await state.set_state(MainMenuForm.send)
+
+
+@router.message(MainMenuForm.send)
+async def send_about(message: Message, state: FSMContext, session: AsyncSession):
+    ids = await get_id(session)
+    bot = message.bot
+
+    id_break = ""
+
+    if ids != "":
+        for id in ids:
+            try:
+                await bot.send_message(chat_id=id, text=message.text)
+            except:
+                id_break = id_break + " " + str(id)
+
+    await message.answer(
+        f"_Все отправлено\\. {id_break}_",
+        parse_mode="MarkdownV2",
+        reply_markup=kb.main_menu_admin()
+    )
+    await state.set_state(MainMenuForm.started)
 
 
 # @router.callback_query(lambda callback: callback.data in games_config.slugs)
