@@ -7,53 +7,37 @@ from aiogram.fsm.context import FSMContext
 import json
 import os
 
-from frontend.bot.main_menu.keyboards import game_started_prefix
-from frontend.bot.games.n_back.utils import with_game_slug
+from frontend.bot.games.n_back.utils import with_game_slug, output_results, generate_examples, UserSession
 from frontend.bot.games.n_back.keyboards import Keyboard, GameEndButtons, GameMenuButtons, NumbersButtons
 from frontend.bot.games.n_back import NBackGame
 from frontend.bot.games.n_back.states import NBackForm, ChangeNState
 from frontend.bot.games.n_back.middleware import Middleware
-
-def output_results(user):
-    res = "Ответы:  Ваш  Верный"
-    for choice, right in zip(user.choice_values, user.right_values):
-        if choice == right:
-            res += "\n    ✅{:>12} {:>11}".format(choice, right)
-        else:
-            res += "\n    ❌{:>12} {:>11}".format(choice, right)
-    return res
-
-def generate_examples(user, n=1):
-    import random
-    examples = []
-    for i in range(n):
-        sign = random.choice(["+", "-"])
-        a = random.randint(0, 9)
-        b = random.randint(0, 9)
-        if n != 1:
-            examples.append(f"{i+1}) {a} {sign} {b}")
-        else:
-            examples.append(f"{a} {sign} {b}")
-        if sign == "+": 
-            user.right_values.append(str(a+b)[-1]) 
-        else:
-            user.right_values.append(str(a-b)[-1]) 
-    return "\n".join(examples)
-
-
-class UserSession:
-    def __init__(self):
-        self.choice_event = asyncio.Event()
-        self.choice_values = []
-        self.right_values = []
+from frontend.bot.main_menu.keyboards import game_started_prefix
 
 user_sessions = {}  # Хранилище сессий пользователей
+
+# Указываем путь к JSON-файлу
+DATA_FILE = "user_data.json"
+project_root = os.path.dirname(os.path.abspath(__file__))
+path_to_file = os.path.join(project_root, DATA_FILE)
+
+def load_user_data():
+    """Загружает данные пользователей из JSON-файла."""
+    if not os.path.exists(path_to_file):
+        return {}
+    with open(path_to_file, "r", encoding="utf-8") as file:
+        return json.load(file)
+
+def save_user_data(data):
+    """Сохраняет данные пользователей в JSON-файле."""
+    with open(path_to_file, "w", encoding="utf-8") as file:
+        json.dump(data, file, indent=4, ensure_ascii=False)
 
 router = Router()
 router.message.middleware(Middleware())
 kb = Keyboard()
-    
-@router.callback_query(lambda callback : callback.data == NBackGame.add_prefix(game_started_prefix))
+
+@router.callback_query(lambda callback: callback.data == NBackGame.add_prefix(game_started_prefix))
 async def game_started(callback: CallbackQuery, state: FSMContext):
     user_id = str(callback.from_user.id)
     user_data = load_user_data()
@@ -99,22 +83,9 @@ async def results_game(callback: CallbackQuery):
         reply_markup=kb.game_menu(),
     )
 
-# Указываем путь к JSON-файлу
-DATA_FILE = "user_data.json"
-project_root = os.path.dirname(os.path.abspath(__file__))
-path_to_file = os.path.join(project_root, DATA_FILE)
-
-def load_user_data():
-    """Загружает данные пользователей из JSON-файла."""
-    if not os.path.exists(path_to_file):
-        return {}
-    with open(path_to_file, "r", encoding="utf-8") as file:
-        return json.load(file)
-
-def save_user_data(data):
-    """Сохраняет данные пользователей в JSON-файле."""
-    with open(path_to_file, "w", encoding="utf-8") as file:
-        json.dump(data, file, indent=4, ensure_ascii=False)
+@router.callback_query(lambda callback: callback.data == with_game_slug(GameMenuButtons.stats.name))
+async def change_n(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(f"Статистика еще не реализована", reply_markup=kb.game_menu())
 
 @router.callback_query(lambda callback: callback.data == with_game_slug(GameMenuButtons.N.name))
 async def change_n(callback: CallbackQuery, state: FSMContext):
