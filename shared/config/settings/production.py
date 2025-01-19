@@ -27,7 +27,7 @@ class ProductionSettings(BaseSettings):
     YA_GPT_FOLDER_ID: str = environ.get("YA_GPT_FOLDER_ID")
     YANDEX_CLOUD_OAUTH_TOKEN: str = environ.get("YANDEX_CLOUD_OAUTH_TOKEN")
     YANDEX_CLOUD_SERVICE_ACCOUNT_API_KEY: str = environ.get("YANDEX_CLOUD_SERVICE_ACCOUNT_API_KEY")
-    ADMIN: int = environ.get("ADMIN")
+    ADMINS: str = environ.get("ADMINS")
 
     @property
     def database_settings(self) -> dict[str, str | int]:

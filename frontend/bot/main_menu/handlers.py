@@ -35,7 +35,7 @@ async def handle_authorization(message: Message, state: FSMContext, session: Asy
         settings = get_settings()
 
         admin = False
-        if message.from_user.id == settings.ADMIN:
+        if message.from_user.id in [int(admin_id) for admin_id in settings.ADMINS.split(",")] if settings.ADMINS else []:
             admin = True
         await authorize_user(
             session=session,
