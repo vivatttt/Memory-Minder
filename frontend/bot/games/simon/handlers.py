@@ -1,9 +1,10 @@
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.methods import answer_callback_query
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from aiogram.types import FSInputFile, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from frontend.bot.games.simon import SimonGame
 from frontend.bot.games.simon.states import SimonForm
@@ -12,6 +13,7 @@ from frontend.bot.main_menu.keyboards import Keyboard as MainMenuKeyboard
 from frontend.bot.games.simon.middleware import Middleware
 from frontend.bot.main_menu.states import MainMenuForm
 from frontend.bot.main_menu.keyboards import game_started_prefix
+from backend.app.services.games.simon.charts import add_scores_simon, scores_length, date_simon
 
 from random import choice
 import asyncio
@@ -26,6 +28,7 @@ async def game_started(callback: CallbackQuery, state: FSMContext):
     keyboard = [
         [KeyboardButton(text="Начать игру")],
         [KeyboardButton(text="Описание игры")],
+        [KeyboardButton(text="Статистика")],
         [KeyboardButton(text="Выйти из игры")]
     ]
     start_text = f"Добро пожаловать в игру *{SimonGame.name}*\\.\n" \
@@ -39,7 +42,7 @@ async def game_started(callback: CallbackQuery, state: FSMContext):
 
 
 @router.message(SimonForm.get_command)
-async def get_command(message: Message, state: FSMContext):
+async def get_command(message: Message, state: FSMContext, session: AsyncSession):
     if message.text == "Начать игру":
         await message.answer(text="Приготовься! Игра начинается.\n\nЗапоминай последовательность цветов.")
         await asyncio.sleep(1)
@@ -57,6 +60,7 @@ async def get_command(message: Message, state: FSMContext):
         keyboard = [
             [KeyboardButton(text="Начать игру")],
             [KeyboardButton(text="Описание игры")],
+            [KeyboardButton(text="Статистика")],
             [KeyboardButton(text="Выйти из игры")]
         ]
         await message.answer(
@@ -71,6 +75,28 @@ async def get_command(message: Message, state: FSMContext):
             reply_markup=main_menu_kb.main_menu()
         )
         await state.set_state(MainMenuForm.started)
+    elif message.text == "Статистика":
+
+        chart_buf = await scores_length(session=session, user_id=message.from_user.id)
+        photo = FSInputFile(chart_buf)
+        await message.answer_photo(photo=photo, caption="Анализ успеха")
+
+        chart_buf = await date_simon(session=session, user_id=message.from_user.id)
+        photo = FSInputFile(chart_buf)
+        await message.answer_photo(photo=photo, caption="Анализ дат")
+
+        keyboard = [
+            [KeyboardButton(text="Начать игру")],
+            [KeyboardButton(text="Описание игры")],
+            [KeyboardButton(text="Статистика")],
+            [KeyboardButton(text="Выйти из игры")]
+        ]
+
+        await message.answer(
+            "_Статистика_",
+            parse_mode="MarkdownV2",
+            reply_markup=ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True)
+        )
     elif message.text != "Продолжить игру":
         await message.answer("Неизвестная команда. Повтори ввод, пожалуйста.")
 
@@ -82,7 +108,7 @@ async def prevent_text_input(message: Message):
 
 @router.message(SimonForm.simon_game)
 async def start_game(message, state: FSMContext):
-    colours = ["Красный", "Синий", "Зелёный", "Жёлтый"]
+    colours = ["🟥", "🟦", "🟩", "🟨"]
     keyboard = [
         [InlineKeyboardButton(text="Красный", callback_data="colour_red")],
         [InlineKeyboardButton(text="Синий", callback_data="colour_blue")],
@@ -106,19 +132,19 @@ async def start_game(message, state: FSMContext):
 
 def translate_colour(english):
     if english == "red":
-        return "Красный"
+        return "🟥"
     elif english == "blue":
-        return "Синий"
+        return "🟦"
     elif english == "green":
-        return "Зелёный"
+        return "🟩"
     elif english == "yellow":
-        return "Жёлтый"
+        return "🟨"
     else:
         return ""
 
 
 @router.callback_query(lambda call: call.data.startswith('colour_'))
-async def handle_colour_choice(call, state: FSMContext):
+async def handle_colour_choice(call, state: FSMContext, session: AsyncSession):
     data = await state.get_data()
     colour = data.get('colour', "")
     answer = data.get('answer', [])
@@ -146,13 +172,17 @@ async def handle_colour_choice(call, state: FSMContext):
             keyboard = [
                 [KeyboardButton(text="Начать игру")],
                 [KeyboardButton(text="Описание игры")],
+                [KeyboardButton(text="Статистика")],
                 [KeyboardButton(text="Выйти из игры")]
             ]
+
+            await add_scores_simon(session=session, user_id=call.from_user.id, all_length=len(answer))
+
             await call.message.answer(
                 text=f"Не унывай\\! Ты продержался {len(answer)} раз\\(а\\)\\.\n\nХочешь попробовать ещё раз\\?",
                 parse_mode="MarkdownV2",
                 reply_markup=ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True)
             )
-            await get_command(message=call.message.edit_text("Продолжить игру"), state=state)
+            await get_command(message=call.message.edit_text("Продолжить игру"), state=state, session=session)
     else:
         await call.answer()

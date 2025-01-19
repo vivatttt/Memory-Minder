@@ -8,6 +8,7 @@ from frontend.bot.main_menu.keyboards import ReturnHomeButtons
 class StartGameButtons(Enum):
     play = "Начать игру"
     description = "Описание и правила игры"
+    stats = "Статистика"
 
 
 class ReturnGameButtons(Enum):

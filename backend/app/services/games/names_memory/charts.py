@@ -1,24 +1,15 @@
 from backend.app.db.gateway import ImageMemoryStatGateway
-from backend.app.db.gateway import ViewedImageGateway
-from backend.app.db.connection import get_session
-from backend.app.services.games.names_memory.const import images_in_round, asking_in_round
-from datetime import datetime
-# import matplotlib.pyplot as plt
-import io
-import re
 
 import matplotlib.pyplot as plt
-
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 async def scores_answers(session: AsyncSession, user_id: int):
-
     correct, incorrect = await ImageMemoryStatGateway.score_answers(
         session=session,
-        user_id_in=user_id)
+        user_id_in=user_id
+    )
 
-    labels = ['Правильные ответы', 'Неравильные ответы']
+    labels = ['Правильные ответы', 'Неправильные ответы']
     sizes = [correct, incorrect]
     colors = ['#8dca89', '#ff9474']
     plt.figure(figsize=(8, 6))
@@ -36,6 +27,7 @@ async def scores_answers(session: AsyncSession, user_id: int):
         0.70,
         fc='white'
     )
+
     fig = plt.gcf()
     fig.gca().add_artist(centre_circle)
 

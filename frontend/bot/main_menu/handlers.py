@@ -88,7 +88,10 @@ async def handle_about(callback: CallbackQuery, state: FSMContext):
     if await state.get_state() != MainMenuForm.started:
         return
     await callback.message.edit_text(
-        "Тут скоро будет подробная информация о возможностях бота",
+        f"Привет! Это **Memory Minder** — бот, который поможет вам развить свою память!\n"
+        f"В настоящий момент я умею играть в пять логических игр:\n\n"
+        f"1. Ложные высказывания\n2. N-back математический\n3. Названия из памяти\n4. Саймон\n5. Слова\n\n"
+        f"Вы сможете найти подробные правила и описание каждой игры, зайдя в нужное меню!",
         reply_markup=kb.back_home()
     )
     await state.set_state(MainMenuForm.about)

@@ -2,7 +2,8 @@ import asyncio
 
 from aiogram import Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, FSInputFile
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from frontend.bot.games.words import WordsGame
 from frontend.bot.games.words.keyboards import Keyboard, StartGameButtons, ReturnGameButtons
@@ -11,6 +12,7 @@ from frontend.bot.games.words.states import WordsForm
 from frontend.bot.games.words.utils import with_game_slug
 from frontend.bot.games.words.gameplay import GameLogic
 from frontend.bot.main_menu.keyboards import game_started_prefix
+from backend.app.services.games.words.charts import add_scores_words, scores_words, date_words
 
 router = Router()
 router.message.middleware(Middleware())
@@ -69,7 +71,7 @@ async def choose_theme(message: Message, state: FSMContext):
 
 
 @router.message(WordsForm.words)
-async def take_guess(message: Message, state: FSMContext):
+async def take_guess(message: Message, state: FSMContext, session: AsyncSession):
     await state.update_data(user_words=message.text)
     data = await state.get_data()
 
@@ -77,6 +79,13 @@ async def take_guess(message: Message, state: FSMContext):
     result_text = (
         f"Правильно: {right_answers} из {words_amount} слов\n"
         f"{'Вы Выиграли!' if right_answers > words_amount / 2 else 'Вы Проиграли'}"
+    )
+
+    await add_scores_words(
+        session=session,
+        user_id=message.from_user.id,
+        correct_answers=right_answers,
+        all_answers=words_amount
     )
 
     await message.answer(result_text, reply_markup=kb.end())
@@ -94,3 +103,21 @@ async def game_description(callback: CallbackQuery):
         reply_markup=kb.return_back(),
     )
 
+
+@router.callback_query(lambda callback: callback.data == with_game_slug(StartGameButtons.stats.name))
+async def stats_game(callback: CallbackQuery, session: AsyncSession):
+
+    chart_buf = await scores_words(session=session, user_id=callback.from_user.id)
+    photo = FSInputFile(chart_buf)
+    await callback.message.answer_photo(photo=photo, caption="Анализ успеха")
+
+
+    chart_buf = await date_words(session=session, user_id=callback.from_user.id)
+    photo = FSInputFile(chart_buf)
+    await callback.message.answer_photo(photo=photo, caption="Анализ дат")
+
+    await callback.message.answer(
+        "_СТАТИСТИКА_",
+        parse_mode="MarkdownV2",
+        reply_markup=kb.return_back(),
+    )

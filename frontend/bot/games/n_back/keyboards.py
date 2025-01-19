@@ -18,7 +18,7 @@ class AfterRuleButtons(Enum):
     stats = "Статистика"
     
 class GameEndButtons(Enum):
-    results = "Просмотр овтетов"
+    results = "Просмотр ответов"
     retry = "Старт игры"
 
 class NumbersButtons():

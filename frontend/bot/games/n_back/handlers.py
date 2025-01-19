@@ -2,8 +2,9 @@ import asyncio
 from asyncio import Event
 from aiogram import F, Router
 from aiogram.filters import Command
-from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery
+from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery, FSInputFile
 from aiogram.fsm.context import FSMContext
+from sqlalchemy.ext.asyncio import AsyncSession
 import json
 import os
 
@@ -13,6 +14,7 @@ from frontend.bot.games.n_back.keyboards import Keyboard, GameEndButtons, GameMe
 from frontend.bot.games.n_back import NBackGame
 from frontend.bot.games.n_back.states import NBackForm, ChangeNState
 from frontend.bot.games.n_back.middleware import Middleware
+from backend.app.services.games.n_back.charts import scores_n_back, add_scores_n_back, date_n_back, answers_n_back
 
 def output_results(user):
     res = "Ответы:  Ваш  Верный"
@@ -66,15 +68,15 @@ async def game_started(callback: CallbackQuery, state: FSMContext):
 
     if first_user:
         await callback.message.answer(
-            f"Приветствую новенького любителя прокачать память🧐 Вы попали в игру *{NBackGame.name}*\." +
-            f"\nВаше *N \= {n}*\. Если вы не понимаете что это, то советую для начала нажать на кнопку *Правила*\." +
+            f"Приветствую новенького любителя прокачать память🧐 Вы попали в игру *{NBackGame.name}*\\." +
+            f"\nВаше *N \\= {n}*\\. Если вы не понимаете что это\\, то советую для начала нажать на кнопку *Правила*\\." +
             f"\n_Выберите действие_",
             parse_mode="MarkdownV2",
             reply_markup=kb.game_menu(),
         )
     else:
         await callback.message.answer(
-            f"Вы попали в игру *{NBackGame.name}*\. Ваше *N \= {n}*\n_Выберите действие_",
+            f"Вы попали в игру *{NBackGame.name}*\\. Ваше *N \\= {n}*\n_Выберите действие_",
             parse_mode="MarkdownV2",
             reply_markup=kb.game_menu(),
         )
@@ -86,7 +88,7 @@ async def retry_game(callback: CallbackQuery):
     user_data = load_user_data()
     n = user_data[user_id].get("n", 1)
     await callback.message.edit_text(
-        f"Вы попали в игру *{NBackGame.name}*\. Ваше *N \= {n}*\n_Выберите действие_",
+        f"Вы попали в игру *{NBackGame.name}*\\. Ваше *N \\= {n}*\n_Выберите действие_",
         parse_mode="MarkdownV2",
         reply_markup=kb.game_menu(),
     )
@@ -154,12 +156,12 @@ async def game_rule(callback: CallbackQuery):
     n = user_data[user_id].get("n", 1)
 
     await callback.message.edit_text(
-        f"В данной игре изначально вам необходимо решить N примеров за 3\*N секунд *\(текущее N \= {n}\)* " +
-        f"и запомнить последние цифры в каждом ответе\. После этого вам придет сообщение с новым примером и 10 цифрами в качестве варианта ответа\."+
-        f" Вам надо будет также решить этот пример, запомнить последнюю цифру и выбрать последнюю цифру ответа на *самый первый* решенный" +
-        f" пример в этой игре\. Далее ситуация будет повторяться, только ответ нужно будет дать уже на второй решенный вами пример и так далее до конца игры\." +
-        f" Всего N\+10 вопросов\." +
-        f"\n\nЕсли в правилах что\-то неясно, то скорее начинайте игру, так станет сразу понятнее\!",
+        f"В данной игре изначально вам необходимо решить N примеров за 3\\*N секунд *\\(текущее N \\= {n}\\)* " +
+        f"и запомнить последние цифры в каждом ответе\\. После этого вам придет сообщение с новым примером и 10 цифрами в качестве варианта ответа\\."+
+        f" Вам надо будет также решить этот пример\\, запомнить последнюю цифру и выбрать последнюю цифру ответа на *самый первый* решенный" +
+        f" пример в этой игре\\. Далее ситуация будет повторяться, только ответ нужно будет дать уже на второй решенный вами пример и так далее до конца игры\\." +
+        f" Всего N\\+10 вопросов\\." +
+        f"\n\nЕсли в правилах что\\-то неясно\\, то скорее начинайте игру\\, так станет сразу понятнее\\!",
         parse_mode="MarkdownV2",
         reply_markup=kb.game_menu_after_rule(),
     )
@@ -174,25 +176,25 @@ async def handle_choice(callback: CallbackQuery):
     # await callback.answer(f"Вы выбрали {session.choice_values[-1]}")
 
 @router.callback_query(lambda callback: callback.data == with_game_slug(GameMenuButtons.play.name))
-async def game_start(callback: CallbackQuery):
+async def game_start(callback: CallbackQuery, session: AsyncSession):
     user_id = callback.from_user.id
     user_data = load_user_data()
     n = user_data[str(user_id)].get("n", 1)
     k = 10
     user_sessions[user_id] = UserSession()
-    session = user_sessions[user_id]    
+    sessions = user_sessions[user_id]
 
-    await callback.message.edit_text(f"Запомните последние цифры в ответах этих примеров\n{generate_examples(session, n)}")
+    await callback.message.edit_text(f"Запомните последние цифры в ответах этих примеров\n{generate_examples(sessions, n)}")
     await asyncio.sleep(3 * n + 2)
 
     for i in range(k):
         msg = await callback.message.edit_text(
-            f"Пример: {generate_examples(session)}" +
+            f"Пример: {generate_examples(sessions)}" +
             f"\n\nВыберите последнюю цифру ответа на {i+1} пример",
             reply_markup=NumbersButtons.key
         )
         
-        await session.choice_event.wait()
+        await sessions.choice_event.wait()
     
     for i in range(n):
         msg = await callback.message.edit_text(
@@ -200,17 +202,60 @@ async def game_start(callback: CallbackQuery):
             reply_markup=NumbersButtons.key
         )
         
-        await session.choice_event.wait()
+        await sessions.choice_event.wait()
+
     
-    if session.choice_values == session.right_values:
+    if sessions.choice_values == sessions.right_values:
+        await add_scores_n_back(
+            session=session,
+            user_id=callback.from_user.id,
+            correct_answers=len(sessions.right_values),
+            wrong_answers=0,
+            percentage=100,
+            n_level=n
+        )
+
         await callback.message.edit_text(
             f"Прекрасный результат🎉🎉🎉 \n100% правильных ответов",
             reply_markup=kb.end_game_menu()
         )
     else:
-        count_right_answer = sum(1 for choice, right in zip(session.choice_values, session.right_values) if choice == right)
+        count_right_answer = sum(1 for choice, right in zip(sessions.choice_values, sessions.right_values) if choice == right)
+
+        await add_scores_n_back(
+            session=session,
+            user_id=callback.from_user.id,
+            correct_answers=count_right_answer,
+            wrong_answers=len(sessions.right_values) - count_right_answer,
+            percentage=int(count_right_answer/len(sessions.choice_values)*100+0.5),
+            n_level=n
+        )
+
+
         await callback.message.edit_text(
             f"Неидеальный результат, есть к чему стремиться!" +
-            f"\n{int(count_right_answer/len(session.choice_values)*100+0.5)}% правильних ответов. Не расстраивайтесь🤗",
+            f"\n{int(count_right_answer/len(sessions.choice_values)*100+0.5)}% правильних ответов. Не расстраивайтесь🤗",
             reply_markup=kb.end_game_menu()
         )
+
+@router.callback_query(lambda callback: callback.data == with_game_slug(GameMenuButtons.stats.name))
+async def stats_game(callback: CallbackQuery, session: AsyncSession):
+
+    chart_buf = await scores_n_back(session=session, user_id=callback.from_user.id)
+    photo = FSInputFile(chart_buf)
+    await callback.message.answer_photo(photo=photo, caption="Анализ успеха")
+
+
+    chart_buf = await date_n_back(session=session, user_id=callback.from_user.id)
+    photo = FSInputFile(chart_buf)
+    await callback.message.answer_photo(photo=photo, caption="Анализ дат")
+
+    chart_buf = await answers_n_back(session=session, user_id=callback.from_user.id)
+    photo = FSInputFile(chart_buf)
+    await callback.message.answer_photo(photo=photo, caption="Анализ ответов")
+
+
+    await callback.message.answer(
+        f"_СТАТИСТИКА_",
+        reply_markup=kb.game_menu_after_rule()
+    )
